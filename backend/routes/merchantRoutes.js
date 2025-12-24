@@ -1,0 +1,17 @@
+const express = require("express");
+const router = express.Router();
+
+const { createCoupon } = require("../controllers/merchantController");
+const Merchant = require("../models/Merchant");
+
+
+router.post("/create-coupon", createCoupon);
+
+router.get("/:merchantId/qr", async (req, res) => {
+  const merchant = await Merchant.findById(req.params.merchantId);
+  res.json({
+    qrToken: merchant.qrToken
+  });
+});
+
+module.exports = router;
