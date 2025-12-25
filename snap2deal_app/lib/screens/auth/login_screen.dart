@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'otp_screen.dart';
+import '../../core/services/auth_service.dart';
+
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -36,8 +39,17 @@ class LoginScreen extends StatelessWidget {
             const SizedBox(height: 20),
 
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 // Next: Send OTP API
+                final success = await AuthService.sendOtp(phoneController.text);
+                if (success) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => OtpScreen(phone: phoneController.text),
+                   ),
+                );
+               }
               },
               child: const Text("Send OTP"),
             ),
@@ -47,3 +59,4 @@ class LoginScreen extends StatelessWidget {
     );
   }
 }
+
