@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:snap2deal_app/screens/home/coupon_list_screen.dart';
+import '../profile/profile_screen.dart';
+
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -9,6 +11,17 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Snap2Deal"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfileScreen()),
+              );
+            },
+          )
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
