@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:snap2deal_app/screens/auth/home_screen.dart';
+import 'package:snap2deal_app/screens/home/home_screen.dart';
 import '../../core/services/auth_service.dart';
 
 class OtpScreen extends StatelessWidget {
