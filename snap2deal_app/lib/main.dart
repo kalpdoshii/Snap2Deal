@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/home/home_screen_v2.dart';
+
 
 void main() {
   runApp(const Snap2DealApp());
@@ -15,7 +17,7 @@ class Snap2DealApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Snap2Deal',
       theme: AppTheme.lightTheme,
-      home: const LoginScreen(),
+      home: const HomeScreenV2(),
     );
   }
 }
