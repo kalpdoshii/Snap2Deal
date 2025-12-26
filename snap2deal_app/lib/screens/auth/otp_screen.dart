@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:snap2deal_app/screens/home/home_screen_red.dart';
+import 'package:snap2deal_app/screens/splash/splash_screen.dart';
 import '../../core/theme/red_theme.dart';
 import '../../core/services/auth_service.dart';
 import '../home/home_screen_v2.dart';
@@ -141,7 +143,7 @@ class _OtpScreenState extends State<OtpScreen> {
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const HomeScreenV2(),
+                              builder: (_) => const SplashScreen(),
                             ),
                             (route) => false,
                           );

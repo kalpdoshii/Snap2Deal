@@ -13,35 +13,6 @@ class HomeScreenRed extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F8F8),
 
-      // 🔻 Bottom Navigation
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        selectedItemColor: RedTheme.primaryRed,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-              icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.confirmation_number), label: "Coupons"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.person), label: "Profile"),
-        ],
-        onTap: (index) {
-          if (index == 1) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const CouponListScreen()),
-            );
-          }
-          if (index == 2) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ProfileScreenRed()),
-            );
-          }
-        },
-      ),
-
       body: SingleChildScrollView(
         child: Column(
           children: [

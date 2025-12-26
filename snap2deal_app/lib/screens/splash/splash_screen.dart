@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:snap2deal_app/screens/home/home_screen_red.dart';
+import 'package:snap2deal_app/screens/main/main_screen.dart';
 import '../auth/login_screen.dart';
 import '../home/home_screen_v2.dart';
 
@@ -28,7 +30,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (userId != null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const HomeScreenV2()),
+        MaterialPageRoute(builder: (_) => const MainScreen()),
       );
     } else {
       Navigator.pushReplacement(
