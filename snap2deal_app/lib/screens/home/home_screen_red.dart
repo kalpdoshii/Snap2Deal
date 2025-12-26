@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:snap2deal_app/screens/home/coupon_list_red.dart';
 import '../../core/theme/red_theme.dart';
 import '../profile/profile_screen.dart';
 import '../home/coupon_list_screen.dart';
@@ -270,7 +271,7 @@ class OfferCard extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (_) => const CouponListScreen()),
+                    builder: (_) => const CouponListRed()),
               );
             },
             child: const Text(
