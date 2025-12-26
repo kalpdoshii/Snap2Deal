@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:snap2deal_app/screens/home/coupon_list_red.dart';
+import 'package:snap2deal_app/screens/profile/profile_screen_red.dart';
 import '../../core/theme/red_theme.dart';
 import '../profile/profile_screen.dart';
 import '../home/coupon_list_screen.dart';
@@ -35,7 +36,7 @@ class HomeScreenRed extends StatelessWidget {
           if (index == 2) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ProfileScreen()),
+              MaterialPageRoute(builder: (_) => const ProfileScreenRed()),
             );
           }
         },
