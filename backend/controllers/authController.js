@@ -19,6 +19,7 @@ exports.sendOtp = async (req, res) => {
 
 // Verify OTP
 exports.verifyOtp = async (req, res) => {
+  console.log("VERIFY OTP BODY:", req.body);
   const { phone, otp, name, email } = req.body;
 
   // ✅ Basic validation

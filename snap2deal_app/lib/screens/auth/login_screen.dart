@@ -136,14 +136,29 @@ class LoginScreen extends StatelessWidget {
                           final phone = phoneController.text.trim();
                           final email = emailController.text.trim();
 
-                          if (name.isEmpty || phone.length < 10) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Name and phone are required"),
-                              ),
-                            );
-                            return;
-                          }
+                           if (name.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Name is required")),
+    );
+    return;
+  }
+
+  // ✅ Phone validation
+  if (!RegExp(r'^[0-9]{10}$').hasMatch(phone)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Valid 10-digit phone number required")),
+    );
+    return;
+  }
+
+  if (email.isNotEmpty &&
+      !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Valid email required")),
+    );
+    return;
+  }
+  
 
                           final success =
                               await AuthService.sendOtp(phone);

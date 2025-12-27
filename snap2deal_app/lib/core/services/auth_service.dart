@@ -14,13 +14,15 @@ class AuthService {
   }
 
   static Future<Map<String, dynamic>?> verifyOtp(
-      String phone, String otp) async {
+      String phone, String otp, String name, String? email) async {
     final response = await http.post(
       Uri.parse("${ApiConstants.baseUrl}/auth/verify-otp"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "phone": phone,
         "otp": otp,
+        "name": name,
+        "email": email,
       }),
     );
 

@@ -127,6 +127,8 @@ class _OtpScreenState extends State<OtpScreen> {
                         final result = await AuthService.verifyOtp(
                           widget.phone,
                           otp,
+                          widget.name,
+                          widget.email,
                         );
 
                         setState(() => isLoading = false);

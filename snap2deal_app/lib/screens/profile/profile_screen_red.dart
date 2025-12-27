@@ -21,73 +21,86 @@ class ProfileScreenRed extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F8F8),
-
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // 🔴 HEADER
-            FutureBuilder(
-  future: SharedPreferences.getInstance(),
-  builder: (context, snapshot) {
-    if (!snapshot.hasData) {
-      return const SizedBox();
-    }
+            // 🔴 HEADER WITH USER DATA
+            FutureBuilder<SharedPreferences>(
+              future: SharedPreferences.getInstance(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const SizedBox(
+                    height: 180,
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
 
-    final prefs = snapshot.data as SharedPreferences;
-    final name = prefs.getString("userName") ?? "User";
-    final email = prefs.getString("userEmail");
+                final prefs = snapshot.data!;
+                final name = prefs.getString("userName") ?? "User";
+                final phone = prefs.getString("userPhone") ?? "";
+                final email = prefs.getString("userEmail");
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          name,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        if (email != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              email,
-              style: const TextStyle(color: Colors.white70),
-            ),
-          ),
-      ],
-    );
-  },
-),
-
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(20, 70, 20, 40),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    RedTheme.primaryRed,
-                    RedTheme.primaryRed.withOpacity(0.85),
-                  ],
-                ),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.person,
-                        color: RedTheme.primaryRed, size: 32),
+                return Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(20, 70, 20, 40),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        RedTheme.primaryRed,
+                        RedTheme.primaryRed.withOpacity(0.85),
+                      ],
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(30),
+                      bottomRight: Radius.circular(30),
+                    ),
                   ),
-                  SizedBox(height: 12),
-                ],
-              ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const CircleAvatar(
+                        radius: 30,
+                        backgroundColor: Colors.white,
+                        child: Icon(
+                          Icons.person,
+                          color: RedTheme.primaryRed,
+                          size: 32,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // 👤 NAME
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 6),
+
+                      // 📱 PHONE
+                      if (phone.isNotEmpty)
+                        Text(
+                          phone,
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+
+                      // 📧 EMAIL (OPTIONAL)
+                      if (email != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            email,
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
             ),
 
             // ⭐ SUBSCRIPTION CARD
@@ -117,8 +130,10 @@ class ProfileScreenRed extends StatelessWidget {
                                 fontWeight: FontWeight.bold),
                           ),
                           SizedBox(height: 6),
-                          Text("Valid till 23 days",
-                              style: TextStyle(color: Colors.grey)),
+                          Text(
+                            "Valid till 23 days",
+                            style: TextStyle(color: Colors.grey),
+                          ),
                         ],
                       ),
                       Container(
