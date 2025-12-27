@@ -26,6 +26,41 @@ class ProfileScreenRed extends StatelessWidget {
         child: Column(
           children: [
             // 🔴 HEADER
+            FutureBuilder(
+  future: SharedPreferences.getInstance(),
+  builder: (context, snapshot) {
+    if (!snapshot.hasData) {
+      return const SizedBox();
+    }
+
+    final prefs = snapshot.data as SharedPreferences;
+    final name = prefs.getString("userName") ?? "User";
+    final email = prefs.getString("userEmail");
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          name,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        if (email != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              email,
+              style: const TextStyle(color: Colors.white70),
+            ),
+          ),
+      ],
+    );
+  },
+),
+
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 70, 20, 40),
@@ -51,19 +86,6 @@ class ProfileScreenRed extends StatelessWidget {
                         color: RedTheme.primaryRed, size: 32),
                   ),
                   SizedBox(height: 12),
-                  Text(
-                    "Welcome Back 👋",
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                  SizedBox(height: 6),
-                  Text(
-                    "Snap2Deal User",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
                 ],
               ),
             ),

@@ -136,6 +136,12 @@ class _OtpScreenState extends State<OtpScreen> {
                               await SharedPreferences.getInstance();
                           prefs.setString(
                               "userId", result["user"]["_id"]);
+                          prefs.setString("userName", result["user"]["name"]);
+                          if (result["user"]["email"] != null) {
+                            prefs.setString(
+                                "userEmail", result["user"]["email"]);
+                          }
+
 
                           // ✅ FIX: NAVIGATE TO HOME
                           Navigator.pushAndRemoveUntil(
