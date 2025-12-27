@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:snap2deal_app/screens/home/home_screen_red.dart';
 import 'package:snap2deal_app/screens/splash/splash_screen.dart';
 import '../../core/theme/red_theme.dart';
 import '../../core/services/auth_service.dart';
-import '../home/home_screen_v2.dart';
 
 class OtpScreen extends StatefulWidget {
   final String phone;

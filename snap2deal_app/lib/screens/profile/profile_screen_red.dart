@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:snap2deal_app/screens/splash/splash_screen.dart';
 import '../../core/theme/red_theme.dart';
-import '../auth/login_screen.dart';
 
 class ProfileScreenRed extends StatelessWidget {
   const ProfileScreenRed({super.key});

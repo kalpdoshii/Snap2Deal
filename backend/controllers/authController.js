@@ -19,10 +19,13 @@ exports.sendOtp = async (req, res) => {
 
 // Verify OTP
 exports.verifyOtp = async (req, res) => {
-  const { phone, otp } = req.body;
+  const { phone, otp, name, email } = req.body;
 
-  if (!phone || !otp) {
-    return res.status(400).json({ message: "Phone & OTP required" });
+  // ✅ Basic validation
+  if (!phone || !otp || !name) {
+    return res
+      .status(400)
+      .json({ message: "Phone, OTP and Name are required" });
   }
 
   if (otp !== TEMP_OTP) {
@@ -32,17 +35,31 @@ exports.verifyOtp = async (req, res) => {
   let user = await User.findOne({ phone });
 
   if (!user) {
+    // 🆕 New user
     user = await User.create({
       phone,
-      isVerified: true
+      name,
+      email: email || null,
+      isVerified: true,
     });
   } else {
+    // 🔁 Existing user
     user.isVerified = true;
+
+    // Update only if missing
+    if (!user.name && name) {
+      user.name = name;
+    }
+
+    if (!user.email && email) {
+      user.email = email;
+    }
+
     await user.save();
   }
 
   res.json({
     message: "OTP verified",
-    user
+    user,
   });
 };

@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:snap2deal_app/screens/home/home_screen_red.dart';
 import 'core/theme/app_theme.dart';
-import 'screens/auth/login_screen.dart';
-import 'screens/home/home_screen_v2.dart';
 import 'screens/splash/splash_screen.dart';
 
 
@@ -20,7 +17,7 @@ class Snap2DealApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Snap2Deal',
       theme: AppTheme.lightTheme,
-      home: const HomeScreenRed(),
+      home: const SplashScreen(),
     );
   }
 }
