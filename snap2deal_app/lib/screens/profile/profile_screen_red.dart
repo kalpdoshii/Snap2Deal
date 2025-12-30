@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:snap2deal_app/screens/splash/splash_screen.dart';
 import '../../core/theme/red_theme.dart';
+import 'edit_profile_screen.dart';
 
 class ProfileScreenRed extends StatelessWidget {
   const ProfileScreenRed({super.key});
@@ -201,23 +202,42 @@ class ProfileScreenRed extends StatelessWidget {
             const SizedBox(height: 30),
 
             // ⚙ OPTIONS
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: [
-                  ProfileOption(
-                    icon: Icons.history,
-                    title: "Redemption History",
-                    onTap: () {},
-                  ),
-                  ProfileOption(
-                    icon: Icons.logout,
-                    title: "Logout",
-                    onTap: () => logout(context),
-                  ),
-                ],
-              ),
+            // ⚙ OPTIONS
+Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 16),
+  child: Column(
+    children: [
+      // ✏️ EDIT PROFILE (NEW)
+      ProfileOption(
+        icon: Icons.edit,
+        title: "Edit Profile",
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const EditProfileScreen(),
             ),
+          );
+        },
+      ),
+
+      // 📜 HISTORY
+      ProfileOption(
+        icon: Icons.history,
+        title: "Redemption History",
+        onTap: () {},
+      ),
+
+      // 🚪 LOGOUT
+      ProfileOption(
+        icon: Icons.logout,
+        title: "Logout",
+        onTap: () => logout(context),
+      ),
+    ],
+  ),
+),
+
 
             const SizedBox(height: 40),
           ],
