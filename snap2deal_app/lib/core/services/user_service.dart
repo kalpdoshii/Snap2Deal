@@ -11,8 +11,10 @@ class UserService {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString("userId");
 
+    print("UPDATE PROFILE REQUEST: $userId $name $email");
+
     final response = await http.put(
-      Uri.parse("${ApiConstants.baseUrl}/user/update-profile"),
+      Uri.parse("${ApiConstants.baseUrl}/users/update-profile"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "userId": userId,
@@ -20,6 +22,9 @@ class UserService {
         "email": email,
       }),
     );
+
+    print("UPDATE PROFILE RESPONSE: ${response.statusCode}");
+    print(response.body);
 
     return response.statusCode == 200;
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:snap2deal_app/screens/home/home_screen_premium.dart';
 import '../home/home_screen_red.dart';
 import '../home/coupon_list_red.dart';
 import '../profile/profile_screen_red.dart';
@@ -15,7 +16,7 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = const [
-    HomeScreenRed(),
+    HomeScreenPremium(),
     CouponListRed(),
     ProfileScreenRed(),
   ];
