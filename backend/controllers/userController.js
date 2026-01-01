@@ -1,4 +1,6 @@
 const User = require("../models/User");
+const UserCoupon = require("../models/UserCoupon");
+
 
 exports.updateProfile = async (req, res) => {
   console.log("UPDATE PROFILE HIT");
@@ -34,5 +36,36 @@ exports.updateProfile = async (req, res) => {
   } catch (err) {
     console.error("❌ Update profile error:", err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.getProfileStats = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const totalCoupons = await UserCoupon.countDocuments({ userId });
+    const usedCoupons = await UserCoupon.countDocuments({
+      userId,
+      status: "USED"
+    });
+
+    const activeCoupons = totalCoupons - usedCoupons;
+
+    const savingsAgg = await UserCoupon.aggregate([
+      { $match: { userId: new mongoose.Types.ObjectId(userId), status: "USED" } },
+      { $group: { _id: null, totalSaved: { $sum: "$discountValue" } } }
+    ]);
+
+    const totalSaved = savingsAgg[0]?.totalSaved || 0;
+
+    res.json({
+      couponsLeft: activeCoupons,
+      usedCoupons,
+      totalSaved
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to load profile stats" });
   }
 };

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:snap2deal_app/screens/home/home_screen_premium.dart';
-import '../home/home_screen_red.dart';
-import '../home/coupon_list_red.dart';
-import '../profile/profile_screen_red.dart';
+import 'package:snap2deal_app/screens/home/vendor_premium_screen.dart';
+import 'package:snap2deal_app/screens/profile/profile_screen_premium.dart';
 import '../../core/theme/red_theme.dart';
 
 class MainScreen extends StatefulWidget {
@@ -17,8 +16,8 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = const [
     HomeScreenPremium(),
-    CouponListRed(),
-    ProfileScreenRed(),
+    VendorsScreen(),
+    ProfileScreenPremium(),
   ];
 
   @override
@@ -39,7 +38,7 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(
               icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(
-              icon: Icon(Icons.confirmation_number), label: "Coupons"),
+              icon: Icon(Icons.storefront), label: "Vendors"),
           BottomNavigationBarItem(
               icon: Icon(Icons.person), label: "Profile"),
         ],

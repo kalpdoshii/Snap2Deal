@@ -38,3 +38,27 @@ exports.subscribeUser = async (req, res) => {
     couponsAssigned: coupons.length
   });
 };
+
+exports.redeemCoupon = async (req, res) => {
+  const { userId, vendorId, couponType } = req.body;
+
+  try {
+    const coupon = await UserCoupon.findOne({
+      userId,
+      vendorId,
+      couponType,
+      status: "ACTIVE",
+    });
+
+    if (!coupon) {
+      return res.status(400).json({ message: "Coupon already used or invalid" });
+    }
+
+    coupon.status = "USED";
+    await coupon.save();
+
+    res.json({ message: "Coupon redeemed" });
+  } catch (err) {
+    res.status(500).json({ message: "Redeem failed" });
+  }
+};

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../core/theme/red_theme.dart';
-import '../../core/services/user_service.dart';
+import 'package:snap2deal_app/core/services/user_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -14,15 +13,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   String phone = "";
-  bool loading = false;
+
+  bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    loadUserData();
+    loadUser();
   }
 
-  Future<void> loadUserData() async {
+  Future<void> loadUser() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       nameController.text = prefs.getString("userName") ?? "";
@@ -36,98 +36,98 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final email = emailController.text.trim();
 
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Name is required")),
-      );
+      _toast("Name is required");
       return;
     }
 
-    setState(() => loading = true);
+    if (email.isNotEmpty &&
+        !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
+      _toast("Enter valid email");
+      return;
+    }
+
+    setState(() => isLoading = true);
 
     final success = await UserService.updateProfile(
       name: name,
       email: email.isEmpty ? null : email,
     );
 
-    setState(() => loading = false);
+    setState(() => isLoading = false);
 
-    if (success && context.mounted) {
+    if (success) {
       final prefs = await SharedPreferences.getInstance();
-      prefs.setString("userName", name);
+      await prefs.setString("userName", name);
+      await prefs.setString("userEmail", email);
 
-      if (email.isNotEmpty) {
-        prefs.setString("userEmail", email);
-      } else {
-        prefs.remove("userEmail");
+      if (mounted) {
+        Navigator.pop(context, true); // return success
       }
-
-      Navigator.pop(context); // go back to profile
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to update profile")),
-      );
+      _toast("Failed to update profile");
     }
+  }
+
+  void _toast(String msg) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8F6F4),
       appBar: AppBar(
-        backgroundColor: RedTheme.primaryRed,
-        title: const Text("Edit Profile"),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          "Edit Profile",
+          style: TextStyle(
+            color: Colors.orange,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // 👤 NAME
-            TextField(
+            _input(
+              label: "Full Name",
               controller: nameController,
-              decoration: const InputDecoration(
-                labelText: "Full Name *",
-              ),
+              icon: Icons.person,
             ),
-
             const SizedBox(height: 16),
-
-            // 📧 EMAIL
-            TextField(
+            _input(
+              label: "Email (optional)",
               controller: emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: "Email (Optional)",
-              ),
+              icon: Icons.email,
             ),
-
             const SizedBox(height: 16),
-
-            // 📱 PHONE (READ ONLY)
-            TextField(
+            _input(
+              label: "Phone",
+              initial: phone,
+              icon: Icons.phone,
               enabled: false,
-              decoration: InputDecoration(
-                labelText: "Mobile Number",
-                hintText: phone,
-              ),
             ),
-
             const Spacer(),
-
-            // 🔴 SAVE BUTTON
             SizedBox(
               width: double.infinity,
-              height: 50,
+              height: 54,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: RedTheme.primaryRed,
+                  backgroundColor: Colors.orange,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                 ),
-                onPressed: loading ? null : saveProfile,
-                child: loading
+                onPressed: isLoading ? null : saveProfile,
+                child: isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
                     : const Text(
                         "Save Changes",
                         style: TextStyle(
-                          color: Colors.white,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -136,6 +136,37 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _input({
+    required String label,
+    TextEditingController? controller,
+    String? initial,
+    required IconData icon,
+    bool enabled = true,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          enabled: enabled,
+          decoration: InputDecoration(
+            hintText: initial,
+            prefixIcon: Icon(icon),
+            filled: true,
+            fillColor: enabled ? Colors.white : Colors.grey.shade200,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

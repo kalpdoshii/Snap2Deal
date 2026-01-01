@@ -1,282 +1,215 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../core/theme/red_theme.dart';
 
-class HomeScreenPremium extends StatelessWidget {
+class HomeScreenPremium extends StatefulWidget {
   const HomeScreenPremium({super.key});
 
-  Future<String> _getName() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString("userName") ?? "User";
-  }
+  @override
+  State<HomeScreenPremium> createState() => _HomeScreenPremiumState();
+}
+
+class _HomeScreenPremiumState extends State<HomeScreenPremium> {
+  String selectedCategory = "Restaurants";
+
+  final categories = ["Restaurants", "Salons", "Shops"];
+
+  final Map<String, List<Map<String, dynamic>>> vendors = {
+  "Restaurants": [],
+  "Salons": [],
+  "Shops": [],
+};
+
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F6F8),
+      backgroundColor: const Color(0xFFF7F7F7),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          "Membership Adda",
+          style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+        ),
+        actions: const [
+          Icon(Icons.notifications_none, color: Colors.black54),
+          SizedBox(width: 12),
+          Icon(Icons.settings, color: Colors.black54),
+          SizedBox(width: 12),
+        ],
+      ),
+
       body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 🔴 HERO
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 64, 20, 90),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    RedTheme.primaryRed,
-                    RedTheme.primaryRed.withOpacity(0.85),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(28),
-                  bottomRight: Radius.circular(28),
-                ),
-              ),
-              child: FutureBuilder<String>(
-                future: _getName(),
-                builder: (context, snap) {
-                  final name = snap.data ?? "User";
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Hi, $name 👋",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        "Unlock exclusive offline deals near you",
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                    ],
-                  );
-                },
-              ),
+            _membershipCard(),
+            const SizedBox(height: 24),
+
+            const Text(
+              "Categories",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 12),
 
-            // 💳 FLOATING MEMBERSHIP
-            Transform.translate(
-              offset: const Offset(0, -56),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.white,
-                        Colors.white.withOpacity(0.95),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(22),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 18,
-                        offset: Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: RedTheme.lightRed,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: const Icon(Icons.workspace_premium,
-                            color: RedTheme.primaryRed),
-                      ),
-                      const SizedBox(width: 14),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Gold Membership",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              "23 days remaining",
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: RedTheme.lightRed,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Text(
-                          "ACTIVE",
-                          style: TextStyle(
-                            color: RedTheme.primaryRed,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            _categorySelector(),
+            const SizedBox(height: 20),
+
+            const Text(
+              "Top Vendors",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 12),
 
-            const SizedBox(height: 4),
-
-            // 🧭 CATEGORIES
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  _CategoryChip(label: "Food", icon: Icons.restaurant),
-                  _CategoryChip(label: "Beauty", icon: Icons.cut),
-                  _CategoryChip(label: "Retail", icon: Icons.store),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 18),
-
-            // 🏷️ OFFERS
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: const [
-                  _OfferCard(
-                    title: "Spice Route",
-                    subtitle: "Buy 2 Get 1 Free",
-                    tag: "POPULAR",
-                  ),
-                  _OfferCard(
-                    title: "Glow Salon",
-                    subtitle: "₹150 OFF on ₹500",
-                    tag: "LIMITED",
-                  ),
-                  _OfferCard(
-                    title: "Style Mart",
-                    subtitle: "₹300 OFF on ₹1000",
-                    tag: "HOT",
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 28),
+            ...vendors[selectedCategory]!.map(_vendorCard),
           ],
         ),
       ),
     );
   }
-}
 
-// ===== Components =====
-
-class _CategoryChip extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  const _CategoryChip({required this.label, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
+  // 🔥 MEMBERSHIP CARD
+  Widget _membershipCard() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 6),
-        ],
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFF9800), Color(0xFFE53935)],
+        ),
+        borderRadius: BorderRadius.circular(22),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: RedTheme.primaryRed),
-          const SizedBox(width: 6),
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+          Row(
+            children: const [
+              CircleAvatar(
+                backgroundColor: Colors.white24,
+                child: Icon(Icons.workspace_premium, color: Colors.white),
+              ),
+              SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Welcome back!",
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  Text(
+                    "Premium Member",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          Row(
+            children: [
+              _infoBox("24", "Coupons Left", Icons.local_offer),
+              const SizedBox(width: 12),
+              _infoBox("89", "Days Left", Icons.calendar_today),
+            ],
+          ),
         ],
       ),
     );
   }
-}
 
-class _OfferCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final String tag;
-  const _OfferCard({
-    required this.title,
-    required this.subtitle,
-    required this.tag,
-  });
+  Widget _infoBox(String value, String label, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white24,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: Colors.white),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(label, style: const TextStyle(color: Colors.white70)),
+          ],
+        ),
+      ),
+    );
+  }
 
-  @override
-  Widget build(BuildContext context) {
+  // 🟠 CATEGORY PILLS
+  Widget _categorySelector() {
+    return Row(
+      children: categories.map((c) {
+        final isActive = c == selectedCategory;
+        return Padding(
+          padding: const EdgeInsets.only(right: 10),
+          child: ChoiceChip(
+            label: Text(c),
+            selected: isActive,
+            selectedColor: Colors.orange,
+            backgroundColor: Colors.white,
+            labelStyle: TextStyle(
+              color: isActive ? Colors.white : Colors.black87,
+            ),
+            onSelected: (_) {
+              setState(() => selectedCategory = c);
+            },
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  // 🏪 VENDOR CARD
+  Widget _vendorCard(Map vendor) {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 10),
-        ],
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8)],
       ),
       child: Row(
         children: [
-          Container(
-            height: 56,
-            width: 56,
-            decoration: BoxDecoration(
-              color: RedTheme.lightRed,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Icon(Icons.local_offer,
-                color: RedTheme.primaryRed),
+          CircleAvatar(
+            backgroundColor: Colors.orange,
+            child: Icon(vendor["icon"], color: Colors.white),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 15)),
+                Text(
+                  vendor["name"],
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(subtitle,
-                    style: const TextStyle(color: Colors.grey)),
+                Text(
+                  vendor["subtitle"],
+                  style: const TextStyle(color: Colors.black54),
+                ),
               ],
             ),
           ),
-          Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: RedTheme.lightRed,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Text(
-              tag,
-              style: const TextStyle(
-                color: RedTheme.primaryRed,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
-            ),
-          ),
+          const Icon(Icons.arrow_forward_ios, size: 16),
         ],
       ),
     );

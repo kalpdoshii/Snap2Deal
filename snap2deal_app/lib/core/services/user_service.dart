@@ -28,4 +28,22 @@ class UserService {
 
     return response.statusCode == 200;
   }
+
+  static Future<Map<String, dynamic>?> fetchProfileStats() async {
+  final prefs = await SharedPreferences.getInstance();
+  final userId = prefs.getString("userId");
+
+  if (userId == null) return null;
+
+  final res = await http.get(
+    Uri.parse("${ApiConstants.baseUrl}/api/users/$userId/stats"),
+  );
+
+  if (res.statusCode == 200) {
+    return jsonDecode(res.body);
+  }
+
+  return null;
+}
+
 }
