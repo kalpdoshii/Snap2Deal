@@ -88,13 +88,28 @@ class SubscriptionScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(30),
                   ),
                 ),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Payment integration coming next 🚀"),
-                    ),
-                  );
-                },
+                onPressed: () async {
+  PaymentService.init(
+    (success) async {
+      await PaymentService.verifyPayment(success);
+      PaymentService.clear();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("🎉 Membership Activated")),
+      );
+
+      Navigator.pop(context);
+    },
+    (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Payment Failed")),
+      );
+    },
+  );
+
+  PaymentService.startPayment(99); // ₹99
+},
+
                 child: const Text(
                   "Upgrade Now",
                   style: TextStyle(
