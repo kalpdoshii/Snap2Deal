@@ -30,7 +30,7 @@ class ScanScreen extends StatelessWidget {
     merchantQrToken: qrToken,
   );
 
-  Navigator.pop(context);
+  Navigator.pop(context, true);
 
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(

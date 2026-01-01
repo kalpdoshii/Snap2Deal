@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, trim: true , lowercase: true , default: null },
   isVerified: { type: Boolean, default: false },
   subscriptionId: { type: mongoose.Schema.Types.ObjectId, ref: "Subscription" , default: null },
+  subscriptionExpiry: { type: Date , default: null }
 }, { timestamps: true });
 
 module.exports = mongoose.model("User", userSchema);

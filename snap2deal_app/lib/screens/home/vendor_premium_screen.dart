@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../core/models/vendor_model.dart';
+import '../../core/services/vendor_service.dart';
 import 'package:snap2deal_app/screens/home/vendor_details_screen.dart';
-
-
 class VendorsScreen extends StatefulWidget {
   const VendorsScreen({super.key});
 
@@ -12,20 +12,18 @@ class VendorsScreen extends StatefulWidget {
 class _VendorsScreenState extends State<VendorsScreen> {
   String selectedCategory = "All";
 
-  final categories = ["All", "Restaurants", "Salons", "Shops"];
+  final categories = ["All", "Restaurant", "Salon", "Shop"];
 
-  List<Map<String, dynamic>> vendors = [];
+  late Future<List<Vendor>> vendorsFuture;
 
-
+  @override
+  void initState() {
+    super.initState();
+    vendorsFuture = VendorService.fetchVendors();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final filteredVendors = selectedCategory == "All"
-        ? vendors
-        : vendors
-            .where((v) => v["category"] == selectedCategory)
-            .toList();
-
     return Scaffold(
       backgroundColor: const Color(0xFFF8F8F8),
       appBar: AppBar(
@@ -45,7 +43,6 @@ class _VendorsScreenState extends State<VendorsScreen> {
           SizedBox(width: 12),
         ],
       ),
-
       body: Column(
         children: [
           // 🟠 CATEGORY FILTER
@@ -77,14 +74,44 @@ class _VendorsScreenState extends State<VendorsScreen> {
             ),
           ),
 
-          // 🏪 VENDORS LIST
+          // 🏪 VENDORS LIST (DYNAMIC)
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: filteredVendors.length,
-              itemBuilder: (context, index) {
-                final vendor = filteredVendors[index];
-                return _vendorCard(vendor);
+            child: FutureBuilder<List<Vendor>>(
+              future: vendorsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(
+                    child: Text("No vendors available"),
+                  );
+                }
+
+                final allVendors = snapshot.data!;
+                final filteredVendors = selectedCategory == "All"
+                    ? allVendors
+                    : allVendors
+                        .where(
+                          (v) => v.category == selectedCategory,
+                        )
+                        .toList();
+
+                if (filteredVendors.isEmpty) {
+                  return const Center(
+                    child: Text("No vendors in this category"),
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: filteredVendors.length,
+                  itemBuilder: (context, index) {
+                    final vendor = filteredVendors[index];
+                    return _vendorCard(context, vendor);
+                  },
+                );
               },
             ),
           ),
@@ -93,109 +120,94 @@ class _VendorsScreenState extends State<VendorsScreen> {
     );
   }
 
-  // 🧾 VENDOR CARD (MATCHES YOUR IMAGE STYLE)
-  Widget _vendorCard(Map vendor) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        color: Colors.white,
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 10),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 🔴 TOP COLOR BAR
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: vendor["color"],
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(22),
-                topRight: Radius.circular(22),
+  // 🧾 VENDOR CARD
+ Widget _vendorCard(BuildContext context, Vendor vendor) {
+  return Container(
+    margin: const EdgeInsets.only(bottom: 18),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(22),
+      color: Colors.white,
+      boxShadow: const [
+        BoxShadow(color: Colors.black12, blurRadius: 10),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // HEADER
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: const BoxDecoration(
+            color: Colors.orange,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(22),
+              topRight: Radius.circular(22),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                vendor.name,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  vendor.category.toUpperCase(),
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // CTA
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: SizedBox(
+            width: double.infinity,
+            height: 46,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => VendorDetailsScreen(
+                      vendorName: vendor.name,
+                      merchantId: vendor.id,
+                    ),
+                  ),
+                );
+              },
+              child: const Text(
+                "View Vendor",
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  vendor["name"],
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    vendor["tag"],
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
+        ),
+      ],
+    ),
+  );
+}
 
-          // ⚪ BODY
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  vendor["offer"],
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 10),
-
-                // 🔥 CTA
-                SizedBox(
-                  width: double.infinity,
-                  height: 46,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => VendorDetailsScreen(
-                            vendorName: vendor["name"],
-                          ),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.store),
-                    label: const Text(
-                      "View Vendor",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

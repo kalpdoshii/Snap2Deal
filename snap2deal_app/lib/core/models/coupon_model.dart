@@ -1,19 +1,22 @@
 class Coupon {
   final String id;
   final String title;
-  final String merchantId;
+  final String description;
+  final int discountValue;
 
   Coupon({
     required this.id,
     required this.title,
-    required this.merchantId,
+    required this.description,
+    required this.discountValue,
   });
 
   factory Coupon.fromJson(Map<String, dynamic> json) {
     return Coupon(
       id: json["_id"],
       title: json["title"],
-      merchantId: json["merchantId"],
+      description: json["description"] ?? "",
+      discountValue: json["discountValue"] ?? 0,
     );
   }
 }

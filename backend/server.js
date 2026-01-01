@@ -6,6 +6,9 @@ const userRoutes = require("./routes/userRoutes");
 const scanRoutes = require("./routes/scanRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const merchantRoutes = require("./routes/merchantRoutes");
+const couponRoutes = require("./routes/couponRoutes");
+//const paymentRoutes = require("./routes/paymentRoutes");
+
 
 
 
@@ -24,6 +27,9 @@ app.use("/api/users", userRoutes);
 app.use("/api/scan", scanRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/merchant", merchantRoutes);
+app.use("/api/coupons", couponRoutes);
+//app.use("/api/payment", paymentRoutes);
+
 
 
 
