@@ -13,34 +13,43 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  String vendorInitialCategory = "All";
 
-  final List<Widget> _screens = const [
-    HomeScreenPremium(),
-    VendorsScreen(),
-    ProfileScreenPremium(),
-  ];
+  void openVendors(String category) {
+    setState(() {
+      vendorInitialCategory = category;
+      _currentIndex = 1; // Vendors tab
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
+        children: [
+          HomeScreenPremium(
+          ),
+          VendorsScreen(
+            initialCategory: vendorInitialCategory,
+          ),
+          const ProfileScreenPremium(),
+        ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         selectedItemColor: RedTheme.primaryRed,
         unselectedItemColor: Colors.grey,
         onTap: (index) {
-          setState(() => _currentIndex = index);
+          setState(() {
+            _currentIndex = index;
+            if (index == 1) vendorInitialCategory = "All";
+          });
         },
         items: const [
-          BottomNavigationBarItem(
-              icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.storefront), label: "Vendors"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.person), label: "Profile"),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(icon: Icon(Icons.storefront), label: "Vendors"),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),
     );

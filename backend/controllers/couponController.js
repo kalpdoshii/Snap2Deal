@@ -27,10 +27,16 @@ exports.getCouponsByMerchant = async (req, res) => {
       user.subscriptionExpiry &&
       new Date(user.subscriptionExpiry) > new Date();
 
+      const response = coupons.map(c => ({
+  _id: c._id,
+  title: c.title,
+  description: c.description,
+  expiryDate: c.expiryDate,
+  isLocked: !isSubscribed
+}));
+
     // 4️⃣ Send response
-    res.json({
-      isSubscribed,
-      coupons,
+    res.json({response,
     });
   } catch (error) {
     console.error("❌ getCouponsByMerchant error:", error);

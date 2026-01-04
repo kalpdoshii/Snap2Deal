@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:snap2deal_app/core/models/coupon_model.dart';
+import 'package:snap2deal_app/core/models/vendor_model.dart';
 import 'package:snap2deal_app/core/services/coupon_service.dart';
-import 'package:snap2deal_app/screens/subscription/subscription_screen.dart';
 import '../scan/scan_screen.dart';
 
 class VendorDetailsScreen extends StatefulWidget {
@@ -33,6 +33,90 @@ class _VendorDetailsScreenState extends State<VendorDetailsScreen> {
   }
 
   @override
+
+  Widget _vendorHeader(Vendor vendor) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // 🖼️ COVER IMAGE
+      Container(
+        height: 220,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: NetworkImage(vendor.coverImageUrl),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          alignment: Alignment.bottomLeft,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.transparent,
+                Colors.black.withOpacity(0.6),
+              ],
+            ),
+          ),
+          child: Text(
+            vendor.name,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+
+      const SizedBox(height: 12),
+
+      // ⭐ RATING
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: List.generate(
+            5,
+            (index) => Icon(
+              index < vendor.rating
+                  ? Icons.star
+                  : Icons.star_border,
+              color: Colors.amber,
+            ),
+          ),
+        ),
+      ),
+
+      const SizedBox(height: 16),
+
+      // 🔘 VIEW COUPONS BUTTON
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: SizedBox(
+          width: double.infinity,
+          height: 46,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            onPressed: () {},
+            child: const Text(
+              "View Coupons",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F8F8),
@@ -121,7 +205,9 @@ class _VendorDetailsScreenState extends State<VendorDetailsScreen> {
                   ),
                 ),
               ),
-              if (!isSubscribed)
+              if (coupon.isLocked)
+                const Icon(Icons.lock, color: Colors.red)
+              else if (!isSubscribed)
                 const Icon(Icons.lock, color: Colors.orange),
             ],
           ),
@@ -142,32 +228,20 @@ class _VendorDetailsScreenState extends State<VendorDetailsScreen> {
                   borderRadius: BorderRadius.circular(30),
                 ),
               ),
-              onPressed: () async {
-                if (!isSubscribed) {
-Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (_) => const SubscriptionScreen(),
-  ),
-);
-                  return;
-                }
+          onPressed: coupon.isLocked    ? () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Get membership to unlock")),
+        );
+      }
+    : () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ScanScreen(couponId: coupon.id),
+          ),
+        );
+      },
 
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ScanScreen(
-                      couponId: coupon.id,
-                    ),
-                  ),
-                );
-
-                if (result == true && mounted) {
-                  setState(() {
-                    _loadCoupons();
-                  });
-                }
-              },
               child: Text(
                 isSubscribed ? "Scan to Redeem" : "Get Membership",
               ),

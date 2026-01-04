@@ -5,6 +5,7 @@ const couponSchema = new mongoose.Schema({
   title: String,
   description: String,
   type: String,
+  isLocked: { type: Boolean, default: true },
   minBillAmount: Number,
   discountValue: Number,
   expiryDate: Date,

@@ -2,23 +2,27 @@ import 'package:flutter/material.dart';
 import '../../core/models/vendor_model.dart';
 import '../../core/services/vendor_service.dart';
 import 'package:snap2deal_app/screens/home/vendor_details_screen.dart';
+
 class VendorsScreen extends StatefulWidget {
-  const VendorsScreen({super.key});
+  final String initialCategory;
+
+  const VendorsScreen({super.key, required this.initialCategory});
 
   @override
   State<VendorsScreen> createState() => _VendorsScreenState();
 }
 
 class _VendorsScreenState extends State<VendorsScreen> {
-  String selectedCategory = "All";
+  late String selectedCategory;
 
-  final categories = ["All", "Restaurant", "Salon", "Shop"];
+  final categories = ["All", "Restaurant", "Cafe", "Salon", "Shop"];
 
   late Future<List<Vendor>> vendorsFuture;
 
   @override
   void initState() {
     super.initState();
+    selectedCategory = widget.initialCategory.isNotEmpty ? widget.initialCategory : "All";
     vendorsFuture = VendorService.fetchVendors();
   }
 
@@ -27,22 +31,10 @@ class _VendorsScreenState extends State<VendorsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F8F8),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text(
-          "Vendors",
-          style: TextStyle(
-            color: Colors.orange,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: const [
-          Icon(Icons.notifications_none, color: Colors.black54),
-          SizedBox(width: 12),
-          Icon(Icons.settings, color: Colors.black54),
-          SizedBox(width: 12),
-        ],
+        automaticallyImplyLeading: false,
+        title: const Text("Vendors"),
       ),
+
       body: Column(
         children: [
           // 🟠 CATEGORY FILTER
@@ -84,19 +76,14 @@ class _VendorsScreenState extends State<VendorsScreen> {
                 }
 
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(
-                    child: Text("No vendors available"),
-                  );
+                  return const Center(child: Text("No vendors available"));
                 }
 
                 final allVendors = snapshot.data!;
                 final filteredVendors = selectedCategory == "All"
                     ? allVendors
-                    : allVendors
-                        .where(
-                          (v) => v.category == selectedCategory,
-                        )
-                        .toList();
+                    : allVendors.where((v) => v.category.toLowerCase() == selectedCategory.toLowerCase(),
+                    ).toList();
 
                 if (filteredVendors.isEmpty) {
                   return const Center(
@@ -122,90 +109,79 @@ class _VendorsScreenState extends State<VendorsScreen> {
 
   // 🧾 VENDOR CARD
  Widget _vendorCard(BuildContext context, Vendor vendor) {
-  return Container(
-    margin: const EdgeInsets.only(bottom: 18),
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(22),
-      color: Colors.white,
-      boxShadow: const [
-        BoxShadow(color: Colors.black12, blurRadius: 10),
-      ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // HEADER
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: const BoxDecoration(
-            color: Colors.orange,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(22),
-              topRight: Radius.circular(22),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                vendor.name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  vendor.category.toUpperCase(),
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ),
-            ],
+  return GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VendorDetailsScreen(
+            vendorName: vendor.name,
+            merchantId: vendor.id,
           ),
         ),
-
-        // CTA
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: SizedBox(
-            width: double.infinity,
-            height: 46,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
+      );
+    },
+    child: Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, blurRadius: 10),
+        ],
+      ),
+      child: Row(
+        children: [
+          // 🔵 LOGO
+          Container(
+            width: 80,
+            height: 80,
+            margin: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Image.network(
+                vendor.logoUrl,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) =>
+                    const Icon(Icons.store, size: 32),
               ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => VendorDetailsScreen(
-                      vendorName: vendor.name,
-                      merchantId: vendor.id,
+            ),
+          ),
+
+          // 🧾 INFO
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    vendor.name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                );
-              },
-              child: const Text(
-                "View Vendor",
-                style: TextStyle(fontWeight: FontWeight.bold),
+                  const SizedBox(height: 6),
+                  Text(
+                    vendor.category,
+                    style: const TextStyle(color: Colors.black54),
+                  ),
+                ],
               ),
             ),
           ),
-        ),
-      ],
+
+          const Padding(
+            padding: EdgeInsets.only(right: 16),
+            child: Icon(Icons.arrow_forward_ios, size: 16),
+          ),
+        ],
+      ),
     ),
   );
 }

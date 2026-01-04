@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:snap2deal_app/core/services/user_service.dart';
 import 'package:snap2deal_app/screens/profile/edit_profile_screen.dart';
+import 'package:snap2deal_app/screens/splash/splash_screen.dart';
 
 class ProfileScreenPremium extends StatefulWidget {
   const ProfileScreenPremium({super.key});
@@ -62,19 +63,10 @@ bool loadingStats = true;
     return Scaffold(
       backgroundColor: const Color(0xFFF8F6F4),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text(
-          "Profile",
-          style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
-        ),
-        actions: const [
-          Icon(Icons.notifications_none, color: Colors.black54),
-          SizedBox(width: 12),
-          Icon(Icons.settings, color: Colors.black54),
-          SizedBox(width: 12),
-        ],
-      ),
+  automaticallyImplyLeading: false,
+  title: const Text("Profile"),
+),
+
 
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -270,10 +262,18 @@ bool loadingStats = true;
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
       ),
       onPressed: () async {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.clear();
-        // navigate to login
-      },
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.clear();
+
+  if (!context.mounted) return;
+
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(builder: (_) => const SplashScreen()),
+    (route) => false,
+  );
+},
+
       icon: const Icon(Icons.logout),
       label: const Text(
         "Logout",

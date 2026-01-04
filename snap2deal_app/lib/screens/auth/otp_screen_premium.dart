@@ -31,8 +31,12 @@ class _OtpScreenPremiumState extends State<OtpScreenPremium> {
 
   @override
   void dispose() {
-    for (final c in controllers) c.dispose();
-    for (final f in focusNodes) f.dispose();
+    for (final c in controllers) {
+      c.dispose();
+    }
+    for (final f in focusNodes) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -219,8 +223,7 @@ class _OtpScreenPremiumState extends State<OtpScreenPremium> {
                                   widget.email,
                                 );
 
-                                if (result != null &&
-                                    context.mounted) {
+                                if (context.mounted) {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
