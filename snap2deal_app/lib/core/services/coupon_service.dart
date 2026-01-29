@@ -39,31 +39,19 @@ class CouponService {
   final prefs = await SharedPreferences.getInstance();
   final userId = prefs.getString("userId");
 
-  if (userId == null) {
-    throw Exception("USER_NOT_LOGGED_IN");
-  }
-
-  final res = await http.get(
+  final response = await http.get(
     Uri.parse(
-      "${ApiConstants.baseUrl}/api/coupons/merchant/$merchantId",
+      "${ApiConstants.baseUrl}/api/coupons/merchant/$merchantId?userId=$userId",
     ),
-    headers: {
-      "Content-Type": "application/json",
-      "userid": userId, // 🔑 auth middleware reads this
-    },
   );
 
-  if (res.statusCode == 200) {
-    // 🔥 BACKEND RETURNS A MAP NOW
-    return jsonDecode(res.body);
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  } else {
+    throw Exception("Failed to load coupons");
   }
-
-  if (res.statusCode == 403) {
-    throw Exception("SUBSCRIPTION_EXPIRED");
-  }
-
-  throw Exception("FAILED_TO_LOAD_COUPONS");
 }
+
 
 
 

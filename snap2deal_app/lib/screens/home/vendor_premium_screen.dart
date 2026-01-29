@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:snap2deal_app/widgests/logo_loader.dart';
 import '../../core/models/vendor_model.dart';
 import '../../core/services/vendor_service.dart';
 import 'package:snap2deal_app/screens/home/vendor_details_screen.dart';
@@ -72,8 +73,7 @@ class _VendorsScreenState extends State<VendorsScreen> {
               future: vendorsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+return const LogoLoader();                }
 
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return const Center(child: Text("No vendors available"));

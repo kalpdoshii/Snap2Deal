@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:snap2deal_app/screens/home/home_screen_premium.dart';
 import 'package:snap2deal_app/screens/home/vendor_premium_screen.dart';
 import 'package:snap2deal_app/screens/profile/profile_screen_premium.dart';
-import '../../core/theme/red_theme.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -13,14 +12,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
-  String vendorInitialCategory = "All";
-
-  void openVendors(String category) {
-    setState(() {
-      vendorInitialCategory = category;
-      _currentIndex = 1; // Vendors tab
-    });
-  }
+  String vendorCategory = "All";
 
   @override
   Widget build(BuildContext context) {
@@ -29,26 +21,25 @@ class _MainScreenState extends State<MainScreen> {
         index: _currentIndex,
         children: [
           HomeScreenPremium(
+            onCategoryTap: (category) {
+              setState(() {
+                vendorCategory = category;
+                _currentIndex = 1; // switch to Vendors tab
+              });
+            },
           ),
-          VendorsScreen(
-            initialCategory: vendorInitialCategory,
-          ),
+          VendorsScreen(initialCategory: vendorCategory),
           const ProfileScreenPremium(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        selectedItemColor: RedTheme.primaryRed,
-        unselectedItemColor: Colors.grey,
         onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-            if (index == 1) vendorInitialCategory = "All";
-          });
+          setState(() => _currentIndex = index);
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.storefront), label: "Vendors"),
+          BottomNavigationBarItem(icon: Icon(Icons.store), label: "Vendors"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),

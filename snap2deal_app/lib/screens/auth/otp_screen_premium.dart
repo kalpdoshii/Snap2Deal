@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:snap2deal_app/screens/main/main_screen.dart';
-import 'package:snap2deal_app/core/services/auth_service.dart'; // adjust import
 
 class OtpScreenPremium extends StatefulWidget {
   final String phone;
@@ -215,13 +214,7 @@ class _OtpScreenPremiumState extends State<OtpScreenPremium> {
                                   return;
                                 }
 
-                                final result =
-                                    await AuthService.verifyOtp(
-                                  widget.phone,
-                                  otp,
-                                  widget.name,
-                                  widget.email,
-                                );
+                
 
                                 if (context.mounted) {
                                   Navigator.pushReplacement(

@@ -45,7 +45,7 @@ class LoginScreenPremium extends StatelessWidget {
 
                 // 🔥 BRAND
                 const Text(
-                  "Membership Adda",
+                  "Snap2Deal",
                   style: TextStyle(
                     fontSize: 34,
                     fontWeight: FontWeight.w800,

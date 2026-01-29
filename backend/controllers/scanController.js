@@ -60,3 +60,27 @@ exports.scanCoupon = async (req, res) => {
     merchant: merchant.name
   });
 };
+
+exports.redeemCoupon = async (req, res) => {
+  const { userId, couponId, merchantQrToken } = req.body;
+
+  try {
+    // 1️⃣ Prevent reuse
+    const alreadyUsed = await UserCoupon.findOne({ userId, couponId });
+    if (alreadyUsed) {
+      return res.status(400).json({ message: "Coupon already used" });
+    }
+
+    // 2️⃣ Mark coupon as used
+    await UserCoupon.create({
+      userId,
+      couponId,
+      merchantId: req.merchantId, // or pass from request
+    });
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Redeem failed" });
+  }
+};

@@ -12,19 +12,21 @@ class ProfileScreenPremium extends StatefulWidget {
 }
 
 class _ProfileScreenPremiumState extends State<ProfileScreenPremium> {
+  bool isSubscribed = true;
+  int daysLeft = 0;
   String name = "";
   String phone = "";
   String email = "";
   int couponsLeft = 0;
-int usedCoupons = 0;
-int totalSaved = 0;
-bool loadingStats = true;
-
+  int usedCoupons = 0;
+  int totalSaved = 0;
+  bool loadingStats = true;
 
   @override
   void initState() {
     super.initState();
     loadUser();
+    _loadSubscriptionStatus();
   }
 
   Future<void> loadUser() async {
@@ -36,19 +38,56 @@ bool loadingStats = true;
     });
   }
 
-  Future<void> loadStats() async {
-  final data = await UserService.fetchProfileStats();
+  Future<void> _loadSubscriptionStatus() async {
+  final prefs = await SharedPreferences.getInstance();
+  final expiryString = prefs.getString("subscriptionExpiry");
 
-  if (data != null) {
+  if (expiryString == null) {
     setState(() {
-      couponsLeft = data["couponsLeft"];
-      usedCoupons = data["usedCoupons"];
-      totalSaved = data["totalSaved"];
-      loadingStats = false;
+      isSubscribed = false;
+      daysLeft = 0;
+    });
+    return;
+  }
+
+  final expiryDate = DateTime.tryParse(expiryString);
+  if (expiryDate == null) {
+    setState(() {
+      isSubscribed = false;
+      daysLeft = 0;
+    });
+    return;
+  }
+
+  final now = DateTime.now();
+
+  if (expiryDate.isAfter(now)) {
+    setState(() {
+      isSubscribed = true;
+      daysLeft = expiryDate.difference(now).inDays;
+    });
+  } else {
+    setState(() {
+      isSubscribed = false;
+      daysLeft = 0;
     });
   }
 }
 
+
+
+  Future<void> loadStats() async {
+    final data = await UserService.fetchProfileStats();
+
+    if (data != null) {
+      setState(() {
+        couponsLeft = data["couponsLeft"];
+        usedCoupons = data["usedCoupons"];
+        totalSaved = data["totalSaved"];
+        loadingStats = false;
+      });
+    }
+  }
 
   String get initials {
     final parts = name.split(" ");
@@ -63,10 +102,9 @@ bool loadingStats = true;
     return Scaffold(
       backgroundColor: const Color(0xFFF8F6F4),
       appBar: AppBar(
-  automaticallyImplyLeading: false,
-  title: const Text("Profile"),
-),
-
+        automaticallyImplyLeading: false,
+        title: const Text("Profile"),
+      ),
 
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -111,27 +149,27 @@ bool loadingStats = true;
                 ),
               ),
               GestureDetector(
-  onTap: () async {
-    final updated = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const EditProfileScreen(),
-      ),
-    );
+                onTap: () async {
+                  final updated = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const EditProfileScreen(),
+                    ),
+                  );
 
-    if (updated == true) {
-      loadUser(); // refresh profile
-    }
-  },
-  child: Container(
-    padding: const EdgeInsets.all(6),
-    decoration: const BoxDecoration(
-      color: Colors.red,
-      shape: BoxShape.circle,
-    ),
-    child: const Icon(Icons.edit, size: 16, color: Colors.white),
-  ),
-),
+                  if (updated == true) {
+                    loadUser(); // refresh profile
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.edit, size: 16, color: Colors.white),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -140,20 +178,24 @@ bool loadingStats = true;
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Icon(Icons.workspace_premium, size: 16, color: Colors.orange),
-              SizedBox(width: 6),
-              Text(
-                "Premium Member",
-                style: TextStyle(
-                  color: Colors.orange,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
+          if (isSubscribed)
+  Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: const [
+      Icon(Icons.workspace_premium, size: 16, color: Colors.orange),
+      SizedBox(width: 6),
+      Text(
+        "Premium Member",
+        style: TextStyle(color: Colors.orange),
+      ),
+    ],
+  )
+else
+  const Text(
+    "Free User",
+    style: TextStyle(color: Colors.grey),
+  ),
+
         ],
       ),
     );
@@ -206,10 +248,13 @@ bool loadingStats = true;
       child: Column(
         children: [
           _optionTile(
-            icon: Icons.credit_card,
-            title: "Subscription",
-            subtitle: "Premium Plan - 89 days left",
-          ),
+  icon: Icons.credit_card,
+  title: "Subscription",
+  subtitle: isSubscribed
+      ? "Premium Plan - $daysLeft days left"
+      : "No active subscription",
+),
+
           _divider(),
           _optionTile(icon: Icons.phone, title: "Phone", subtitle: phone),
           _divider(),
@@ -262,17 +307,17 @@ bool loadingStats = true;
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
       ),
       onPressed: () async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.clear();
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.clear();
 
-  if (!context.mounted) return;
+        if (!context.mounted) return;
 
-  Navigator.pushAndRemoveUntil(
-    context,
-    MaterialPageRoute(builder: (_) => const SplashScreen()),
-    (route) => false,
-  );
-},
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const SplashScreen()),
+          (route) => false,
+        );
+      },
 
       icon: const Icon(Icons.logout),
       label: const Text(

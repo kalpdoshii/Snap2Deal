@@ -3,37 +3,27 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:snap2deal_app/core/models/vendor_model.dart';
 import 'package:snap2deal_app/core/services/vendor_service.dart';
 import 'package:snap2deal_app/screens/home/vendor_details_screen.dart';
-import 'package:snap2deal_app/screens/home/vendor_premium_screen.dart';
+import 'package:snap2deal_app/widgests/logo_loader.dart';
 
 class HomeScreenPremium extends StatefulWidget {
-  const HomeScreenPremium({super.key});
+  final Function(String category) onCategoryTap;
+
+  const HomeScreenPremium({super.key, required this.onCategoryTap});
 
   @override
   State<HomeScreenPremium> createState() => _HomeScreenPremiumState();
 }
 
 class _HomeScreenPremiumState extends State<HomeScreenPremium> {
-  String? expandedVendorId;
   bool isSubscribed = false;
   int daysLeft = 0;
+  String? expandedVendorId;
 
-  final List<Map<String, String>> categories = [
-    {
-      "name": "Restaurants",
-      "image": "assets/images/categories/restaurant.jpg",
-    },
-    {
-      "name": "Cafe",
-      "image": "assets/images/categories/cafe.jpg",
-    },
-    {
-      "name": "Salons",
-      "image": "assets/images/categories/salon.jpg",
-    },
-    {
-      "name": "Shops",
-      "image": "assets/images/categories/shop.jpg",
-    },
+  final List<Map<String, String>> categories = const [
+    {"name": "Restaurants", "image": "assets/images/categories/restaurant.jpg"},
+    {"name": "Cafe", "image": "assets/images/categories/cafe.jpg"},
+    {"name": "Salons", "image": "assets/images/categories/salon.jpg"},
+    {"name": "Shops", "image": "assets/images/categories/shop.jpg"},
   ];
 
   @override
@@ -46,23 +36,38 @@ class _HomeScreenPremiumState extends State<HomeScreenPremium> {
     final prefs = await SharedPreferences.getInstance();
     final expiryString = prefs.getString("subscriptionExpiry");
 
-    if (expiryString != null) {
-      final expiryDate = DateTime.parse(expiryString);
-      final now = DateTime.now();
+    print("SUB EXPIRY => ${prefs.getString("subscriptionExpiry")}");
 
-      if (expiryDate.isAfter(now)) {
-        setState(() {
-          isSubscribed = true;
-          daysLeft = expiryDate.difference(now).inDays;
-        });
-        return;
-      }
+    if (expiryString == null) {
+      setState(() {
+        isSubscribed = false;
+        daysLeft = 0;
+      });
+      return;
     }
 
-    setState(() {
-      isSubscribed = false;
-      daysLeft = 0;
-    });
+    final expiryDate = DateTime.tryParse(expiryString);
+    if (expiryDate == null) {
+      setState(() {
+        isSubscribed = false;
+        daysLeft = 0;
+      });
+      return;
+    }
+
+    final now = DateTime.now();
+
+    if (expiryDate.isAfter(now)) {
+      setState(() {
+        isSubscribed = true;
+        daysLeft = expiryDate.difference(now).inDays;
+      });
+    } else {
+      setState(() {
+        isSubscribed = false;
+        daysLeft = 0;
+      });
+    }
   }
 
   @override
@@ -76,11 +81,9 @@ class _HomeScreenPremiumState extends State<HomeScreenPremium> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // 🔝 TOP SECTION
           isSubscribed ? _membershipCard() : _buyPlanBanner(),
           const SizedBox(height: 24),
 
-          // 📂 CATEGORIES
           const Text(
             "Categories",
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -90,64 +93,64 @@ class _HomeScreenPremiumState extends State<HomeScreenPremium> {
 
           const SizedBox(height: 24),
 
-          // ⭐ TOP VENDORS (SAFE UI)
           const Text(
             "Top Vendors",
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-FutureBuilder<List<Vendor>>(
-  future: VendorService.fetchVendors(),
-  builder: (context, snapshot) {
-    if (!snapshot.hasData) {
-      return const Center(child: CircularProgressIndicator());
-    }
 
-    final vendors = snapshot.data!.take(5).toList();
+          FutureBuilder<List<Vendor>>(
+            future: VendorService.fetchVendors(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const LogoLoader();
+              }
 
-    return Column(
-      children: vendors.map((vendor) {
-        return VendorExpandableCard(
-          vendor: vendor,
-          isExpanded: expandedVendorId == vendor.id,
-          onTap: () {
-            setState(() {
-              expandedVendorId =
-                  expandedVendorId == vendor.id ? null : vendor.id;
-            });
-          },
-          onViewCoupons: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => VendorDetailsScreen(
-                  vendorName: vendor.name,
-                  merchantId: vendor.id,
-                ),
-              ),
-            );
-          },
-        );
-      }).toList(),
-    );
-  },
-),
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Center(child: Text("No vendors available"));
+              }
 
+              final vendors = snapshot.data!.take(5).toList();
 
-
+              return Column(
+                children: vendors.map((vendor) {
+                  return VendorExpandableCard(
+                    vendor: vendor,
+                    isExpanded: expandedVendorId == vendor.id,
+                    onTap: () {
+                      setState(() {
+                        expandedVendorId = expandedVendorId == vendor.id
+                            ? null
+                            : vendor.id;
+                      });
+                    },
+                    onViewCoupons: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => VendorDetailsScreen(
+                            vendorName: vendor.name,
+                            merchantId: vendor.id,
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }).toList(),
+              );
+            },
+          ),
         ],
       ),
     );
   }
 
-  // 🟢 SUBSCRIPTION BANNER (NOT SUBSCRIBED)
+  // 🔥 BUY PLAN BANNER
   Widget _buyPlanBanner() {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Colors.orange, Colors.red],
-        ),
+        gradient: const LinearGradient(colors: [Colors.orange, Colors.red]),
         borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
@@ -167,7 +170,6 @@ FutureBuilder<List<Vendor>>(
             style: TextStyle(color: Colors.white70),
           ),
           const SizedBox(height: 16),
-
           _planTile("Monthly Plan", "₹99 / month"),
           const SizedBox(height: 12),
           _planTile("Quarterly Plan", "₹249 / 3 months"),
@@ -213,7 +215,7 @@ FutureBuilder<List<Vendor>>(
     );
   }
 
-  // 🟡 MEMBERSHIP CARD (SUBSCRIBED)
+  // 🟡 PREMIUM CARD
   Widget _membershipCard() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -226,10 +228,7 @@ FutureBuilder<List<Vendor>>(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Welcome back!",
-            style: TextStyle(color: Colors.white70),
-          ),
+          const Text("Welcome back!", style: TextStyle(color: Colors.white70)),
           const SizedBox(height: 4),
           const Text(
             "Premium Member",
@@ -239,9 +238,9 @@ FutureBuilder<List<Vendor>>(
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Text(
-            "$daysLeft Days Left",
+            "$daysLeft days left",
             style: const TextStyle(color: Colors.white),
           ),
         ],
@@ -249,7 +248,7 @@ FutureBuilder<List<Vendor>>(
     );
   }
 
-  // 🖼️ CATEGORY IMAGE SLIDER
+  // 🖼 CATEGORY SLIDER
   Widget _categorySlider() {
     return SizedBox(
       height: 130,
@@ -258,45 +257,28 @@ FutureBuilder<List<Vendor>>(
         itemCount: categories.length,
         itemBuilder: (context, index) {
           final category = categories[index];
-
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => VendorsScreen(
-                    initialCategory: category["name"]!,
-                  ),
-                ),
-              );
-            },
-            child: Container(
-              width: 120,
-              margin: const EdgeInsets.only(right: 14),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                image: DecorationImage(
-                  image: AssetImage(category["image"]!),
-                  fit: BoxFit.cover,
-                  colorFilter: ColorFilter.mode(
-                    Colors.black.withOpacity(0.45),
-                    BlendMode.darken,
-                  ),
+          return Container(
+            width: 120,
+            margin: const EdgeInsets.only(right: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              image: DecorationImage(
+                image: AssetImage(category["image"]!),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(
+                  Colors.black.withOpacity(0.45),
+                  BlendMode.darken,
                 ),
               ),
-              child: Center(
-                child: Text(
-                  category["name"]!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    shadows: [
-                      Shadow(color: Colors.black54, blurRadius: 6),
-                    ],
-                  ),
-                ),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              category["name"]!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
               ),
             ),
           );
@@ -304,162 +286,9 @@ FutureBuilder<List<Vendor>>(
       ),
     );
   }
-
-  // ⭐ TOP VENDORS (SAFE PLACEHOLDER)
- Widget topVendorsSection(List vendors) {
-  return SizedBox(
-    height: 180,
-    child: ListView.builder(
-      scrollDirection: Axis.horizontal,
-      itemCount: vendors.length,
-      itemBuilder: (context, index) {
-        final vendor = vendors[index];
-
-        return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => VendorDetailsScreen(
-                  vendorName: vendor.name,
-                  merchantId: vendor.id,
-                ),
-              ),
-            );
-          },
-          child: Container(
-            width: 260,
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
-              boxShadow: const [
-                BoxShadow(color: Colors.black12, blurRadius: 12),
-              ],
-            ),
-            child: Row(
-              children: [
-                // 🔵 LOGO
-                Container(
-                  width: 90,
-                  height: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(22),
-                      bottomLeft: Radius.circular(22),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Image.network(
-                      vendor.logoUrl,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) =>
-                          const Icon(Icons.store, size: 40),
-                    ),
-                  ),
-                ),
-
-                // 🧾 INFO
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          vendor.name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          vendor.category,
-                          style: const TextStyle(
-                            color: Colors.black54,
-                          ),
-                        ),
-                        const Spacer(),
-                        const Text(
-                          "View Deals →",
-                          style: TextStyle(
-                            color: Colors.orange,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    ),
-  );
 }
 
-Widget _topVendorTile(BuildContext context, Vendor vendor) {
-  return InkWell(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => VendorDetailsScreen(
-            vendorName: vendor.name,
-            merchantId: vendor.id,
-          ),
-        ),
-      );
-    },
-    child: Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 6),
-        ],
-      ),
-      child: Row(
-        children: [
-          // 🟠 LOGO
-          CircleAvatar(
-            radius: 26,
-            backgroundColor: Colors.grey.shade100,
-            backgroundImage: NetworkImage(vendor.logoUrl),
-          ),
-
-          const SizedBox(width: 14),
-
-          // 🏪 NAME
-          Expanded(
-            child: Text(
-              vendor.name,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-
-          const Icon(Icons.arrow_forward_ios, size: 16),
-        ],
-      ),
-    ),
-  );
-}
-
-
-}
+/* -------------------- EXPANDABLE VENDOR CARD -------------------- */
 
 class VendorExpandableCard extends StatelessWidget {
   final Vendor vendor;
@@ -478,125 +307,80 @@ class VendorExpandableCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
+      duration: const Duration(milliseconds: 250),
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 8),
-        ],
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8)],
       ),
       child: Column(
         children: [
-          // 🔹 HEADER
-          InkWell(
-            borderRadius: BorderRadius.circular(18),
+          ListTile(
             onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 26,
-                    backgroundImage: NetworkImage(vendor.logoUrl),
-                    backgroundColor: Colors.grey.shade200,
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Text(
-                      vendor.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    isExpanded
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
-                    color: Colors.grey,
-                  ),
-                ],
-              ),
+            leading: CircleAvatar(
+              backgroundColor: Colors.grey.shade200,
+              backgroundImage: vendor.logoUrl.isNotEmpty
+                  ? NetworkImage(vendor.logoUrl)
+                  : null,
+              child: vendor.logoUrl.isEmpty ? const Icon(Icons.store) : null,
+            ),
+            title: Text(
+              vendor.name,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            trailing: Icon(
+              isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
             ),
           ),
 
-          // 🔻 EXPAND AREA
-          AnimatedCrossFade(
-            duration: const Duration(milliseconds: 300),
-            crossFadeState: isExpanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            firstChild: const SizedBox(),
-            secondChild: _expandedContent(context),
-          ),
+          if (isExpanded) _expandedSection(context),
         ],
       ),
     );
   }
 
-  Widget _expandedContent(BuildContext context) {
+  Widget _expandedSection(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 🖼️ COVER IMAGE
         Container(
-          height: 180,
+          height: 160,
           width: double.infinity,
           decoration: BoxDecoration(
-            image: DecorationImage(
-              image: NetworkImage(vendor.coverImageUrl),
-              fit: BoxFit.cover,
+            color: Colors.grey.shade200,
+            image: vendor.coverImageUrl.isNotEmpty
+                ? DecorationImage(
+                    image: NetworkImage(vendor.coverImageUrl),
+                    fit: BoxFit.cover,
+                  )
+                : null,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(
+            5,
+            (i) => Icon(
+              i < vendor.rating ? Icons.star : Icons.star_border,
+              color: Colors.amber,
             ),
           ),
         ),
-
         const SizedBox(height: 12),
-
-        // ⭐ RATING
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: List.generate(
-              5,
-              (index) => Icon(
-                index < vendor.rating
-                    ? Icons.star
-                    : Icons.star_border,
-                color: Colors.amber,
-                size: 20,
+          child: ElevatedButton(
+            onPressed: onViewCoupons,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
               ),
             ),
+            child: const Text("View Coupons"),
           ),
         ),
-
-        const SizedBox(height: 14),
-
-        // 🔘 CTA
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: SizedBox(
-            width: double.infinity,
-            height: 44,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-              onPressed: onViewCoupons,
-              child: const Text(
-                "View Coupons",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-        ),
-
         const SizedBox(height: 16),
       ],
     );

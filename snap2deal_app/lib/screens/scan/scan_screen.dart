@@ -12,7 +12,7 @@ class ScanScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text("Scan QR")),
       body: MobileScanner(
-       onDetect: (BarcodeCapture capture) async {
+      onDetect: (BarcodeCapture capture) async {
   final List<Barcode> barcodes = capture.barcodes;
 
   if (barcodes.isEmpty) return;
@@ -37,10 +37,12 @@ class ScanScreen extends StatelessWidget {
       content: Text(
         success
             ? "🎉 Coupon Redeemed Successfully"
-            : "❌ Invalid or Used Coupon",
+            : "❌ Invalid or Used Coupon"),
       ),
-    ),
   );
+  if (success) {
+    Navigator.pop(context, true); // 👈 IMPORTANT
+  }
 },
 
       ),

@@ -2,44 +2,30 @@ const Coupon = require("../models/Coupon");
 const UserCoupon = require("../models/UserCoupon");
 
 exports.getCouponsByMerchant = async (req, res) => {
+  const { merchantId } = req.params;
+  const { userId } = req.query;
+
   try {
-    const { merchantId } = req.params;
-    const user = req.user;
+    const coupons = await Coupon.find({ merchantId });
 
-    // 1️⃣ Get coupons already used by this user
-    const usedCoupons = await UserCoupon.find({
-      userId: user._id,
-      status: "USED",
-    }).select("couponId");
+    // 🔥 Find used coupons for this user
+    let usedCouponIds = [];
+    if (userId) {
+      const usedCoupons = await UserCoupon.find({ userId });
+      usedCouponIds = usedCoupons.map(c => c.couponId.toString());
+    }
 
-    const usedCouponIds = usedCoupons.map((c) => c.couponId);
+    // 🔥 Remove used coupons
+    const availableCoupons = coupons.filter(
+      c => !usedCouponIds.includes(c._id.toString())
+    );
 
-    // 2️⃣ Fetch active & un-used coupons
-    const coupons = await Coupon.find({
-      merchantId,
-      isActive: true,
-      expiryDate: { $gte: new Date() },
-      _id: { $nin: usedCouponIds },
+    res.json({
+      isSubscribed: true, // already handled earlier
+      coupons: availableCoupons,
     });
-
-    // 3️⃣ Check subscription status
-    const isSubscribed =
-      user.subscriptionExpiry &&
-      new Date(user.subscriptionExpiry) > new Date();
-
-      const response = coupons.map(c => ({
-  _id: c._id,
-  title: c.title,
-  description: c.description,
-  expiryDate: c.expiryDate,
-  isLocked: !isSubscribed
-}));
-
-    // 4️⃣ Send response
-    res.json({response,
-    });
-  } catch (error) {
-    console.error("❌ getCouponsByMerchant error:", error);
-    res.status(500).json({ message: "Failed to fetch coupons" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to load coupons" });
   }
 };

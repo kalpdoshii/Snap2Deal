@@ -44,6 +44,13 @@ class AuthService {
       await prefs.setString("userName", user["name"] ?? "");
       await prefs.setString("userEmail", user["email"] ?? "");
 
+      // 🎟 SAVE SUBSCRIPTION EXPIRY
+      if (user["subscriptionExpiry"] != null) {
+        await prefs.setString("subscriptionExpiry", user["subscriptionExpiry"]);
+      } else {
+        await prefs.remove("subscriptionExpiry");
+      }
+
       // 🧪 DEBUG LOG (IMPORTANT)
       print("✅ USER SAVED: ${user["_id"]}");
 

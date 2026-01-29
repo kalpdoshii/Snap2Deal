@@ -14,7 +14,9 @@ const couponRoutes = require("./routes/couponRoutes");
 
 require("dotenv").config();
 
-const connectDB = require("./config/db");
+const connectDB = require("./config/db")
+console.log("MONGO_URI =", process.env.MONGO_URI);
+;
 
 const app = express();
 

@@ -9,7 +9,6 @@ const authMiddleware = require("../middlewares/authMiddleware");
 
 router.get(
   "/merchant/:merchantId",
-  authMiddleware,
-  getCouponsByMerchant
+    getCouponsByMerchant
 );
 module.exports = router;

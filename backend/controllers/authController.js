@@ -1,5 +1,4 @@
 const User = require("../models/User");
-
 // Temporary OTP (for development)
 const TEMP_OTP = "123456";
 
@@ -61,6 +60,13 @@ exports.verifyOtp = async (req, res) => {
 
   res.json({
     message: "OTP verified",
-    user,
+    user: {
+       _id: user._id,
+    name: user.name,
+    phone: user.phone,
+    email: user.email,
+    subscriptionId: user.subscriptionId,
+    subscriptionExpiry: user.subscriptionExpiry
+    }
   });
 };
