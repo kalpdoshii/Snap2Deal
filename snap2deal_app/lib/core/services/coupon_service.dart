@@ -1,58 +1,28 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import '../constants/api_constants.dart';
+import 'package:snap2deal_app/core/services/firestore_service.dart';
 
 class CouponService {
+  // Get user's redeemed coupons
   static Future<List<dynamic>> getUserCoupons(String userId) async {
-    final response = await http.get(
-      Uri.parse("${ApiConstants.baseUrl}/api/users/$userId/coupons"),
-    );
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    }
-    return [];
+    return FirestoreService.getUserCoupons(userId);
   }
 
+  // Redeem a coupon
   static Future<bool> redeemCoupon({
     required String userId,
     required String couponId,
     required String merchantQrToken,
   }) async {
-    final response = await http.post(
-      Uri.parse("${ApiConstants.baseUrl}/api/scan/scan"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "userId": userId,
-        "couponId": couponId,
-        "merchantQrToken": merchantQrToken,
-      }),
+    return FirestoreService.redeemCoupon(
+      userId: userId,
+      couponId: couponId,
+      merchantQrToken: merchantQrToken,
     );
-
-    return response.statusCode == 200;
   }
 
+  // Get coupons by merchant
   static Future<Map<String, dynamic>> fetchCouponsByMerchant(
-  String merchantId,
-) async {
-  final prefs = await SharedPreferences.getInstance();
-  final userId = prefs.getString("userId");
-
-  final response = await http.get(
-    Uri.parse(
-      "${ApiConstants.baseUrl}/api/coupons/merchant/$merchantId?userId=$userId",
-    ),
-  );
-
-  if (response.statusCode == 200) {
-    return jsonDecode(response.body);
-  } else {
-    throw Exception("Failed to load coupons");
+    String merchantId,
+  ) async {
+    return FirestoreService.getCouponsByMerchant(merchantId);
   }
-}
-
-
-
-
 }

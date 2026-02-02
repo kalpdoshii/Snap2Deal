@@ -1,0 +1,88 @@
+// Firestore Security Rules for Snap2Deal
+// Copy and paste this into Firebase Console > Firestore Database > Rules
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // 👥 USERS COLLECTION
+    match /users/{userId} {
+      // Users can read their own profile
+      allow read: if isOwner(userId);
+      
+      // Users can update their own profile
+      allow update: if isOwner(userId);
+      
+      // Anyone can create a new user (for signup)
+      allow create: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    
+    // 🛍️ COUPONS COLLECTION (Public Read, Admin Write)
+    match /coupons/{couponId} {
+      // Anyone can read coupons
+      allow read: if true;
+      
+      // Only admins can create/update/delete coupons
+      allow write: if isAuthenticated() && request.auth.token.admin == true;
+    }
+    
+    // 🏪 MERCHANTS COLLECTION (Public Read)
+    match /merchants/{merchantId} {
+      // Anyone can read merchants
+      allow read: if true;
+      
+      // Only admins can write
+      allow write: if isAuthenticated() && request.auth.token.admin == true;
+    }
+    
+    // 🧾 USER_COUPONS COLLECTION (Track Redeemed Coupons)
+    match /userCoupons/{docId} {
+      // Users can read their own redeemed coupons
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      
+      // Users can create redemption records for themselves
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      
+      // Admins can read all
+      allow read: if request.auth.token.admin == true;
+    }
+    
+    // 📝 SCANS COLLECTION (Track QR Scans)
+    match /scans/{docId} {
+      // Users can read their own scans
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      
+      // Users can create scan logs for themselves
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      
+      // Admins can read all
+      allow read: if request.auth.token.admin == true;
+    }
+    
+    // 💳 SUBSCRIPTIONS COLLECTION
+    match /subscriptions/{subscriptionId} {
+      // Users can read their subscription
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      
+      // Subscriptions created by payment service
+      allow create: if isAuthenticated();
+      
+      // Admins can read/write all
+      allow read, write: if request.auth.token.admin == true;
+    }
+    
+    // 🔐 Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

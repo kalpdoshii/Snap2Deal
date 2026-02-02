@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:snap2deal_app/core/services/auth_service.dart';
 import 'package:snap2deal_app/screens/main/main_screen.dart';
 
 class OtpScreenPremium extends StatefulWidget {
@@ -19,14 +20,14 @@ class OtpScreenPremium extends StatefulWidget {
 }
 
 class _OtpScreenPremiumState extends State<OtpScreenPremium> {
-  final List<TextEditingController> controllers =
-      List.generate(6, (_) => TextEditingController());
+  final List<TextEditingController> controllers = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
 
-  final List<FocusNode> focusNodes =
-      List.generate(6, (_) => FocusNode());
+  final List<FocusNode> focusNodes = List.generate(6, (_) => FocusNode());
 
-  String get otp =>
-      controllers.map((c) => c.text).join();
+  String get otp => controllers.map((c) => c.text).join();
 
   @override
   void dispose() {
@@ -48,10 +49,7 @@ class _OtpScreenPremiumState extends State<OtpScreenPremium> {
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Color(0xFF7A3E00),
-                  Color(0xFF2B1B0E),
-                ],
+                colors: [Color(0xFF7A3E00), Color(0xFF2B1B0E)],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -103,8 +101,7 @@ class _OtpScreenPremiumState extends State<OtpScreenPremium> {
                         const SizedBox(height: 6),
                         Text(
                           "+91 ${widget.phone}",
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
 
                         const SizedBox(height: 28),
@@ -116,35 +113,30 @@ class _OtpScreenPremiumState extends State<OtpScreenPremium> {
 
                         // 🔢 OTP BOXES
                         Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: List.generate(6, (i) {
                             return SizedBox(
                               width: 45,
                               height: 55,
                               child: AnimatedContainer(
-                                duration:
-                                    const Duration(milliseconds: 200),
+                                duration: const Duration(milliseconds: 200),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  borderRadius:
-                                      BorderRadius.circular(14),
+                                  borderRadius: BorderRadius.circular(14),
                                   boxShadow: [
                                     BoxShadow(
                                       color: focusNodes[i].hasFocus
-                                          ? Colors.orange
-                                              .withOpacity(0.4)
+                                          ? Colors.orange.withOpacity(0.4)
                                           : Colors.black12,
                                       blurRadius: 8,
-                                    )
+                                    ),
                                   ],
                                 ),
                                 child: TextField(
                                   controller: controllers[i],
                                   focusNode: focusNodes[i],
                                   maxLength: 1,
-                                  keyboardType:
-                                      TextInputType.number,
+                                  keyboardType: TextInputType.number,
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                     fontSize: 20,
@@ -156,9 +148,9 @@ class _OtpScreenPremiumState extends State<OtpScreenPremium> {
                                   ),
                                   onChanged: (v) {
                                     if (v.isNotEmpty && i < 5) {
-                                      FocusScope.of(context)
-                                          .requestFocus(
-                                              focusNodes[i + 1]);
+                                      FocusScope.of(
+                                        context,
+                                      ).requestFocus(focusNodes[i + 1]);
                                     }
                                   },
                                 ),
@@ -176,17 +168,12 @@ class _OtpScreenPremiumState extends State<OtpScreenPremium> {
                           child: DecoratedBox(
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFFFF9800),
-                                  Color(0xFFE53935),
-                                ],
+                                colors: [Color(0xFFFF9800), Color(0xFFE53935)],
                               ),
-                              borderRadius:
-                                  BorderRadius.circular(30),
+                              borderRadius: BorderRadius.circular(30),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.orange
-                                      .withOpacity(0.4),
+                                  color: Colors.orange.withOpacity(0.4),
                                   blurRadius: 18,
                                   offset: const Offset(0, 10),
                                 ),
@@ -194,34 +181,46 @@ class _OtpScreenPremiumState extends State<OtpScreenPremium> {
                             ),
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    Colors.transparent,
-                                shadowColor:
-                                    Colors.transparent,
+                                backgroundColor: Colors.transparent,
+                                shadowColor: Colors.transparent,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(30),
+                                  borderRadius: BorderRadius.circular(30),
                                 ),
                               ),
                               onPressed: () async {
                                 if (otp.length != 6) {
-                                  ScaffoldMessenger.of(context)
-                                      .showSnackBar(
+                                  ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                        content: Text(
-                                            "Enter 6-digit OTP")),
+                                      content: Text("Enter 6-digit OTP"),
+                                    ),
                                   );
                                   return;
                                 }
 
-                
+                                // 🔁 VERIFY OTP WITH BACKEND
+                                final success = await AuthService.verifyOtp(
+                                  widget.phone,
+                                  otp,
+                                  widget.name,
+                                  widget.email,
+                                );
 
-                                if (context.mounted) {
+                                if (!context.mounted) return;
+
+                                if (success) {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                        builder: (_) =>
-                                            const MainScreen()),
+                                      builder: (_) => const MainScreen(),
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "OTP verification failed. Try again.",
+                                      ),
+                                    ),
                                   );
                                 }
                               },
@@ -241,12 +240,10 @@ class _OtpScreenPremiumState extends State<OtpScreenPremium> {
 
                         Center(
                           child: TextButton(
-                            onPressed: () =>
-                                Navigator.pop(context),
+                            onPressed: () => Navigator.pop(context),
                             child: const Text(
                               "Change phone number",
-                              style:
-                                  TextStyle(color: Colors.black54),
+                              style: TextStyle(color: Colors.black54),
                             ),
                           ),
                         ),

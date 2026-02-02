@@ -1,0 +1,38 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    match /users/{userId} {
+      allow read: if request.auth.uid == userId;
+      allow write: if request.auth.uid == userId;
+      allow create: if request.auth.uid != null;
+    }
+    
+    match /coupons/{couponId} {
+      allow read: if true;
+      allow write: if request.auth.token.admin == true;
+    }
+    
+    match /merchants/{merchantId} {
+      allow read: if true;
+      allow write: if request.auth.token.admin == true;
+    }
+    
+    match /userCoupons/{docId} {
+      allow read: if request.auth.uid == resource.data.userId || request.auth.token.admin == true;
+      allow create: if request.auth.uid == request.resource.data.userId;
+      allow update: if request.auth.uid == resource.data.userId;
+      allow delete: if request.auth.uid == resource.data.userId;
+    }
+    
+    match /scans/{scanId} {
+      allow read: if request.auth.uid == resource.data.userId || request.auth.token.admin == true;
+      allow create: if request.auth.uid == request.resource.data.userId;
+    }
+    
+    match /subscriptions/{subId} {
+      allow read: if request.auth.uid == resource.data.userId || request.auth.token.admin == true;
+      allow write: if request.auth.token.admin == true;
+    }
+  }
+}

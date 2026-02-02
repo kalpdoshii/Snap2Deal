@@ -1,46 +1,71 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:snap2deal_app/core/constants/api_constants.dart';
+import 'firestore_service.dart';
 
 class UserService {
   static Future<bool> updateProfile({
     required String name,
     String? email,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString("userId");
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('userId');
 
+      if (userId == null) {
+        return false;
+      }
 
-    final response = await http.put(
-      Uri.parse("${ApiConstants.baseUrl}/api/users/update-profile"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "userId": userId ?? "",
-        "name": name,
-        "email": email,
-      }),
-    );
+      final success = await FirestoreService.updateUserProfile(
+        userId: userId,
+        name: name,
+        email: email,
+      );
 
+      if (success) {
+        // Update local storage
+        await prefs.setString('userName', name);
+        if (email != null) {
+          await prefs.setString('userEmail', email);
+        }
+      }
 
-    return response.statusCode == 200;
+      return success;
+    } catch (e) {
+      print('❌ Error updating profile: $e');
+      return false;
+    }
   }
 
   static Future<Map<String, dynamic>?> fetchProfileStats() async {
-  final prefs = await SharedPreferences.getInstance();
-  final userId = prefs.getString("userId");
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('userId');
 
-  if (userId == null) return null;
+      if (userId == null) return null;
 
-  final res = await http.get(
-    Uri.parse("${ApiConstants.baseUrl}/api/users/$userId/stats"),
-  );
-
-  if (res.statusCode == 200) {
-    return jsonDecode(res.body);
+      return await FirestoreService.getProfileStats(userId);
+    } catch (e) {
+      print('❌ Error fetching profile stats: $e');
+      return null;
+    }
   }
 
-  return null;
-}
+  static Future<Map<String, dynamic>?> getSubscriptionStatus() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('userId');
 
+      if (userId == null) {
+        return null;
+      }
+
+      return await FirestoreService.getSubscriptionStatus(userId);
+    } catch (e) {
+      print('❌ Error getting subscription status: $e');
+      return null;
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getMerchants() async {
+    return FirestoreService.getMerchants();
+  }
 }

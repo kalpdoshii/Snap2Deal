@@ -17,23 +17,22 @@ The app focuses on **offline businesses**, enabling QR-based coupon redemption w
 - Profile management (name, email, phone)
 
 ### 🔒 Subscription Logic
-- Non-members can **see coupons (locked)**
-- Members can **redeem coupons**
-- Subscription status validated at backend
-- Coupons disappear after use
+ Non-members can **see coupons (locked)**
+ Members can **redeem coupons**
+ Subscription status validated via Firebase/Firestore
+ Coupons disappear after use
 
 ### 🏪 Vendor & Coupon
-- Vendors managed via backend
-- Coupons linked to vendors
-- Coupon usage tracked per user
+ Vendors managed via Firestore
+ Coupons linked to vendors
+ Coupon usage tracked per user
 
 ---
+### Backend / Server
+This project has been migrated to Firebase. There is no local Node.js backend in this repository.
 
-## 🛠️ Tech Stack
+Follow the Firebase setup steps in `FIREBASE_SETUP_GUIDE.md` to configure Authentication and Firestore.
 
-### Frontend (Mobile App)
-- Flutter
-- Dart
 - Mobile Scanner (QR scanning)
 - Shared Preferences
 

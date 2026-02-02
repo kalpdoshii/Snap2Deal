@@ -27,6 +27,7 @@ class _ProfileScreenPremiumState extends State<ProfileScreenPremium> {
     super.initState();
     loadUser();
     _loadSubscriptionStatus();
+    loadStats();
   }
 
   Future<void> loadUser() async {
@@ -39,53 +40,62 @@ class _ProfileScreenPremiumState extends State<ProfileScreenPremium> {
   }
 
   Future<void> _loadSubscriptionStatus() async {
-  final prefs = await SharedPreferences.getInstance();
-  final expiryString = prefs.getString("subscriptionExpiry");
+    final prefs = await SharedPreferences.getInstance();
+    final expiryString = prefs.getString("subscriptionExpiry");
 
-  if (expiryString == null) {
-    setState(() {
-      isSubscribed = false;
-      daysLeft = 0;
-    });
-    return;
+    if (expiryString == null) {
+      setState(() {
+        isSubscribed = false;
+        daysLeft = 0;
+      });
+      return;
+    }
+
+    final expiryDate = DateTime.tryParse(expiryString);
+    if (expiryDate == null) {
+      if (mounted) {
+        setState(() {
+          isSubscribed = false;
+          daysLeft = 0;
+        });
+      }
+      return;
+    }
+
+    final now = DateTime.now();
+
+    if (mounted) {
+      if (expiryDate.isAfter(now)) {
+        setState(() {
+          isSubscribed = true;
+          daysLeft = expiryDate.difference(now).inDays;
+        });
+      } else {
+        setState(() {
+          isSubscribed = false;
+          daysLeft = 0;
+        });
+      }
+    }
   }
-
-  final expiryDate = DateTime.tryParse(expiryString);
-  if (expiryDate == null) {
-    setState(() {
-      isSubscribed = false;
-      daysLeft = 0;
-    });
-    return;
-  }
-
-  final now = DateTime.now();
-
-  if (expiryDate.isAfter(now)) {
-    setState(() {
-      isSubscribed = true;
-      daysLeft = expiryDate.difference(now).inDays;
-    });
-  } else {
-    setState(() {
-      isSubscribed = false;
-      daysLeft = 0;
-    });
-  }
-}
-
-
 
   Future<void> loadStats() async {
     final data = await UserService.fetchProfileStats();
 
-    if (data != null) {
-      setState(() {
-        couponsLeft = data["couponsLeft"];
-        usedCoupons = data["usedCoupons"];
-        totalSaved = data["totalSaved"];
-        loadingStats = false;
-      });
+    if (mounted) {
+      if (data != null) {
+        setState(() {
+          couponsLeft = data["couponsLeft"];
+          usedCoupons = data["usedCoupons"];
+          totalSaved = data["totalSaved"];
+          loadingStats = false;
+        });
+      } else {
+        // ensure loading flag cleared so UI updates even on failure
+        setState(() {
+          loadingStats = false;
+        });
+      }
     }
   }
 
@@ -179,23 +189,16 @@ class _ProfileScreenPremiumState extends State<ProfileScreenPremium> {
           ),
           const SizedBox(height: 6),
           if (isSubscribed)
-  Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: const [
-      Icon(Icons.workspace_premium, size: 16, color: Colors.orange),
-      SizedBox(width: 6),
-      Text(
-        "Premium Member",
-        style: TextStyle(color: Colors.orange),
-      ),
-    ],
-  )
-else
-  const Text(
-    "Free User",
-    style: TextStyle(color: Colors.grey),
-  ),
-
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.workspace_premium, size: 16, color: Colors.orange),
+                SizedBox(width: 6),
+                Text("Premium Member", style: TextStyle(color: Colors.orange)),
+              ],
+            )
+          else
+            const Text("Free User", style: TextStyle(color: Colors.grey)),
         ],
       ),
     );
@@ -205,11 +208,11 @@ else
   Widget _statsRow() {
     return Row(
       children: [
-        _statCard("--", "Coupons Left"),
+        _statCard(loadingStats ? "--" : couponsLeft.toString(), "Coupons Left"),
         const SizedBox(width: 12),
-        _statCard("--", "Used"),
+        _statCard(loadingStats ? "--" : usedCoupons.toString(), "Used"),
         const SizedBox(width: 12),
-        _statCard("--", "Saved"),
+        _statCard(loadingStats ? "--" : totalSaved.toString(), "Saved"),
       ],
     );
   }
@@ -248,12 +251,12 @@ else
       child: Column(
         children: [
           _optionTile(
-  icon: Icons.credit_card,
-  title: "Subscription",
-  subtitle: isSubscribed
-      ? "Premium Plan - $daysLeft days left"
-      : "No active subscription",
-),
+            icon: Icons.credit_card,
+            title: "Subscription",
+            subtitle: isSubscribed
+                ? "Premium Plan - $daysLeft days left"
+                : "No active subscription",
+          ),
 
           _divider(),
           _optionTile(icon: Icons.phone, title: "Phone", subtitle: phone),
