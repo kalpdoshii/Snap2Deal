@@ -1,18 +1,20 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:snap2deal_app/core/services/auth_service.dart';
+import 'package:snap2deal_app/core/services/firebase_auth_service.dart';
 import 'package:snap2deal_app/screens/main/main_screen.dart';
 
 class OtpScreenPremium extends StatefulWidget {
   final String phone;
   final String name;
   final String? email;
+  final String verificationId;
 
   const OtpScreenPremium({
     super.key,
     required this.phone,
     required this.name,
     this.email,
+    required this.verificationId,
   });
 
   @override
@@ -26,6 +28,9 @@ class _OtpScreenPremiumState extends State<OtpScreenPremium> {
   );
 
   final List<FocusNode> focusNodes = List.generate(6, (_) => FocusNode());
+
+  bool isVerifying = false;
+  String? errorMessage;
 
   String get otp => controllers.map((c) => c.text).join();
 
@@ -187,51 +192,68 @@ class _OtpScreenPremiumState extends State<OtpScreenPremium> {
                                   borderRadius: BorderRadius.circular(30),
                                 ),
                               ),
-                              onPressed: () async {
-                                if (otp.length != 6) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text("Enter 6-digit OTP"),
-                                    ),
-                                  );
-                                  return;
-                                }
+                              onPressed: isVerifying
+                                  ? null
+                                  : () async {
+                                      setState(() => errorMessage = null);
 
-                                // 🔁 VERIFY OTP WITH BACKEND
-                                final success = await AuthService.verifyOtp(
-                                  widget.phone,
-                                  otp,
-                                  widget.name,
-                                  widget.email,
-                                );
+                                      if (otp.length != 6) {
+                                        setState(
+                                          () => errorMessage =
+                                              "Please enter all 6 digits",
+                                        );
+                                        return;
+                                      }
 
-                                if (!context.mounted) return;
+                                      setState(() => isVerifying = true);
 
-                                if (success) {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const MainScreen(),
-                                    ),
-                                  );
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        "OTP verification failed. Try again.",
+                                      // 🔁 VERIFY OTP WITH FIREBASE
+                                      final success =
+                                          await FirebaseAuthService.verifyOtp(
+                                            widget.phone,
+                                            otp,
+                                            widget.name,
+                                            widget.email,
+                                            widget.verificationId,
+                                          );
+
+                                      if (!context.mounted) return;
+
+                                      if (success) {
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => const MainScreen(),
+                                          ),
+                                        );
+                                      } else {
+                                        setState(() {
+                                          isVerifying = false;
+                                          errorMessage =
+                                              "Invalid OTP. Please check and try again.";
+                                        });
+                                      }
+                                    },
+                              child: isVerifying
+                                  ? const SizedBox(
+                                      height: 24,
+                                      width: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
+                                      ),
+                                    )
+                                  : const Text(
+                                      "Verify & Continue →",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
                                       ),
                                     ),
-                                  );
-                                }
-                              },
-                              child: const Text(
-                                "Verify & Continue →",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
                             ),
                           ),
                         ),

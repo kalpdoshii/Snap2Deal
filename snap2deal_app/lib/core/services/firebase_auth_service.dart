@@ -6,32 +6,97 @@ class FirebaseAuthService {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // 📲 SEND OTP
-  static Future<bool> sendOtp(String phone) async {
+  // 📲 SEND OTP - Returns verificationId via callback
+  static Future<void> sendOtp({
+    required String phone,
+    required Function(String verificationId) onCodeSent,
+    required Function(String error) onError,
+    Function(PhoneAuthCredential credential)? onAutoVerified,
+  }) async {
     try {
-      // Format phone with country code if needed
-      String formattedPhone = phone.startsWith('+') ? phone : '+91$phone';
+      // ✅ VALIDATE PHONE NUMBER
+      String cleanPhone = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+
+      if (cleanPhone.isEmpty) {
+        onError('❌ Phone number is empty');
+        return;
+      }
+
+      if (!cleanPhone.startsWith('+')) {
+        if (cleanPhone.length != 10) {
+          onError(
+            '❌ Invalid phone format: Must be 10 digits (e.g., 9876543210)',
+          );
+          return;
+        }
+        cleanPhone = '+91$cleanPhone';
+      } else {
+        if (cleanPhone.length < 10) {
+          onError('❌ Invalid phone format: Phone number too short');
+          return;
+        }
+      }
+
+      print('📞 Sending OTP to: $cleanPhone');
 
       await _auth.verifyPhoneNumber(
-        phoneNumber: formattedPhone,
-        timeout: const Duration(seconds: 60),
+        phoneNumber: cleanPhone,
+        timeout: const Duration(seconds: 120),
         verificationCompleted: (PhoneAuthCredential credential) async {
-          await _auth.signInWithCredential(credential);
+          print('✅ Auto-verified phone');
+          if (onAutoVerified != null) {
+            onAutoVerified(credential);
+          } else {
+            await _auth.signInWithCredential(credential);
+          }
         },
         verificationFailed: (FirebaseAuthException e) {
-          print('❌ OTP Verification Failed: ${e.message}');
+          print('❌ OTP Verification Failed');
+          print('   Error Code: ${e.code}');
+          print('   Message: ${e.message}');
+
+          String userMessage = _getErrorMessage(e.code, e.message);
+          onError(userMessage);
         },
         codeSent: (String verificationId, int? resendToken) {
-          print('✅ OTP Sent to $phone. Verification ID: $verificationId');
+          print('✅ OTP Sent Successfully');
+          print('   Phone: $cleanPhone');
+          print('   Verification ID: $verificationId');
+          onCodeSent(verificationId);
         },
         codeAutoRetrievalTimeout: (String verificationId) {
-          print('⏰ Auto retrieval timeout');
+          print('⏰ Auto retrieval timeout. User must enter OTP manually.');
         },
       );
-      return true;
     } catch (e) {
       print('❌ Error sending OTP: $e');
-      return false;
+      onError('❌ Error sending OTP: $e');
+    }
+  }
+
+  // 🔍 MAP FIREBASE ERROR CODES TO USER-FRIENDLY MESSAGES
+  static String _getErrorMessage(String code, String? message) {
+    switch (code) {
+      case 'invalid-phone-number':
+        return '❌ Invalid phone number format.\n\nExpected: 10-digit number (9876543210)\nor +country-code format (+919876543210)';
+      case 'missing-phone-number':
+        return '❌ Phone number is missing or empty';
+      case 'too-many-requests':
+        return '❌ Too many attempts. Try again later (5+ minutes)';
+      case 'network-request-failed':
+        return '❌ Network error. Check internet connection';
+      case 'internal-error':
+        return '❌ Firebase internal error. Try again shortly';
+      case 'quota-exceeded':
+        return '❌ SMS quota exceeded for this project. Contact Firebase support';
+      case 'unsupported-first-factor':
+        return '❌ Phone authentication not supported in your Firebase project';
+      case 'billing-not-enabled':
+        return '❌ Phone authentication requires billing account.\n\n✅ FIX:\n1. Go to Firebase Console\n2. Click "Billing" (left sidebar)\n3. Attach a billing account\n4. Wait 5 mins, retry';
+      case 'operation-not-allowed':
+        return '❌ Phone sign-in is disabled.\n\n✅ FIX:\n1. Go to Firebase Console → Authentication\n2. Click "Sign-in method"\n3. Enable "Phone" provider\n4. Click Save, wait 1 min';
+      default:
+        return '❌ ${message ?? "OTP verification failed. Please try again"}';
     }
   }
 

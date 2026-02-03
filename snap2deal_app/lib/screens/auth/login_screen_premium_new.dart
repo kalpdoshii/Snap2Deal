@@ -213,30 +213,39 @@ class _LoginScreenPremiumState extends State<LoginScreenPremium> {
     setState(() => isLoading = true);
 
     // 🔁 CALL FIREBASE SEND OTP
-    final success = await FirebaseAuthService.sendOtp(phone);
-
-    setState(() => isLoading = false);
-
-    if (success && mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => OtpScreenPremium(
-            phone: phone,
-            name: name,
-            email: email.isEmpty ? null : email,
-          ),
-        ),
-      );
-    } else {
-      _showError("Failed to send OTP. Please try again.");
-    }
+    await FirebaseAuthService.sendOtp(
+      phone: phone,
+      onCodeSent: (verificationId) {
+        setState(() => isLoading = false);
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => OtpScreenPremium(
+                phone: phone,
+                name: name,
+                email: email.isEmpty ? null : email,
+                verificationId: verificationId,
+              ),
+            ),
+          );
+        }
+      },
+      onError: (error) {
+        setState(() => isLoading = false);
+        _showError("Failed to send OTP: $error");
+      },
+    );
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 5),
+        backgroundColor: Colors.red.shade700,
+      ),
+    );
   }
 
   // 🔤 LABEL

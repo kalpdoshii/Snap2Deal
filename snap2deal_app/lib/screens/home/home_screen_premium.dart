@@ -3,7 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:snap2deal_app/core/models/vendor_model.dart';
 import 'package:snap2deal_app/core/services/vendor_service.dart';
 import 'package:snap2deal_app/screens/home/vendor_details_screen.dart';
-import 'package:snap2deal_app/widgests/logo_loader.dart';
 
 class HomeScreenPremium extends StatefulWidget {
   final Function(String category) onCategoryTap;
@@ -103,7 +102,54 @@ class _HomeScreenPremiumState extends State<HomeScreenPremium> {
             future: VendorService.fetchVendors(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const LogoLoader();
+                return const Center(
+                  child: CircularProgressIndicator(color: Colors.orange),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.red.shade300),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        '❌ Error Loading Vendors',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red.shade800,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        snapshot.error.toString().replaceAll('Exception: ', ''),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.red.shade700,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Retry'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            // Trigger rebuild to retry
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                );
               }
 
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -320,10 +366,10 @@ class VendorExpandableCard extends StatelessWidget {
             onTap: onTap,
             leading: CircleAvatar(
               backgroundColor: Colors.grey.shade200,
-              backgroundImage: vendor.logoUrl.isNotEmpty
-                  ? NetworkImage(vendor.logoUrl)
+              backgroundImage: vendor.image.isNotEmpty
+                  ? NetworkImage(vendor.image)
                   : null,
-              child: vendor.logoUrl.isEmpty ? const Icon(Icons.store) : null,
+              child: vendor.image.isEmpty ? const Icon(Icons.store) : null,
             ),
             title: Text(
               vendor.name,
@@ -348,9 +394,9 @@ class VendorExpandableCard extends StatelessWidget {
           width: double.infinity,
           decoration: BoxDecoration(
             color: Colors.grey.shade200,
-            image: vendor.coverImageUrl.isNotEmpty
+            image: vendor.image.isNotEmpty
                 ? DecorationImage(
-                    image: NetworkImage(vendor.coverImageUrl),
+                    image: NetworkImage(vendor.image),
                     fit: BoxFit.cover,
                   )
                 : null,
